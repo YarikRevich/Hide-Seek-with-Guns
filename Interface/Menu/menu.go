@@ -1,16 +1,16 @@
 package Menu
 
 import (
+	"Game/Heroes/Users"
+	"Game/Window"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/faiface/pixel"
 )
 
-func CreateStartMenu(winConf WindowConfig, userConfig *Users.User){
-	image, err := Utils.LoadImage("button.png")
-	if err != nil{
-		panic(err)
+func ListenForActions(winConf Window.WindowConfig, currState *Users.States){
+	if (winConf.Win.MousePosition().X >= 379 && winConf.Win.MousePosition().X <= 590) && (winConf.Win.MousePosition().Y >= 320 && winConf.Win.MousePosition().Y <= 415) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+		currState.SetCreateLobbyMenu()
 	}
-	sprite := pixel.NewSprite(image, winConf.win.Bounds())
-	sprite.Draw(winConf.win, pixel.IM.Moved(winConf.win.Bounds().Center()))
-	checkUserInterfaceActivity
+	if (winConf.Win.MousePosition().X >= 379 && winConf.Win.MousePosition().X <= 590) && (winConf.Win.MousePosition().Y >= 144 && winConf.Win.MousePosition().Y <= 242) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+		currState.SetJoinLobbyMenu()
+	}
 }
