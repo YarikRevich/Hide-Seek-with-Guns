@@ -3,11 +3,11 @@ package main
 import (
 	"github.com/faiface/pixel/pixelgl"
 	_ "github.com/faiface/pixel"
-	_ "Game/Utils"
 	"Game/Window"
 	"Game/Interface/Menu"
 	"Game/Interface/CreationLobbyMenu"
 	"Game/Interface/LobbyWaitRoom"
+	"Game/Interface/JoinLobbyMenu"
 	"Game/Heroes/Users"
 	"Game/Server"
 	"fmt"
@@ -31,23 +31,18 @@ func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, user
 	
 	if currState.StartMenu{
 		Menu.ListenForActions(*winConf, currState)
-		return
-	}
-	if currState.CreateLobbyMenu{
+
+	}else if currState.CreateLobbyMenu{
 		CreationLobbyMenu.CreateLobbyMakingMenu(winConf, currState, userConfig)
-		return
-	}
-	if currState.JoinLobbyMenu{
-		fmt.Println("joinlobby menu")
-		return
-	}
-	if currState.WaitRoom{
+
+	}else if currState.JoinLobbyMenu{
+		JoinLobbyMenu.CreateJoinLobbyMenu(winConf, currState, userConfig)
+
+	}else if currState.WaitRoom{
 		LobbyWaitRoom.CreateLobbyWaitRoom(*winConf, currState, userConfig, waitRoom)
-		return
-	}
-	if currState.Game{
-		fmt.Println("game!")
-		return
+
+	}else if currState.Game{
+		fmt.Println("game!")	
 	}
 }
 
@@ -57,6 +52,7 @@ func run(){
 	winConf := Window.CreateWindow()
 	Window.DrawBackgroundImage(&winConf)
 	Window.LoadCreationLobbyMenuBG(&winConf)
+	Window.LoadJoinLobbyMenu(&winConf)
 	Window.LoadWaitRoomMenuBG(&winConf)
 	Window.DrawAllTextAreas(&winConf)
 	//Loads all the available hero images

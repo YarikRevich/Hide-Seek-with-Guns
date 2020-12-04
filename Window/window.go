@@ -20,14 +20,29 @@ type MenuImages struct{
 
 type TextAreas struct{
 	WriteIDTextArea *text.Text
-	InputLobbyIDTextArea *text.Text
+	CreateLobbyInput *CreateLobbyInput
 	NewMembersAnnouncement *text.Text
 	NewMembersTextArea *text.Text
+	CurrentLobbyIDArea *text.Text
+	JoinLobbyAnnouncement *text.Text
+	JoinLobbyInput *JoinLobbyInput
+}
+
+type JoinLobbyInput struct{
+	InputLobbyIDTextArea *text.Text
 	WrittenText []string
-} 
+}
+
+type CreateLobbyInput struct{
+	InputLobbyIDTextArea *text.Text
+	WrittenText []string
+}
 
 type WindowUpdation struct{
-	Frame int
+	StartMenuFrame int
+	CreationMenuFrame int
+	JoinLobbyMenuFrame int
+	WaitRoomFrame int
 }
 
 type WaitRoom struct{
@@ -53,7 +68,8 @@ func CreateWindow()WindowConfig{
 	if err != nil{
 		panic(err)
 	}
-	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: new(TextAreas), WindowUpdation: new(WindowUpdation)}
+	textArea := TextAreas{CreateLobbyInput: new(CreateLobbyInput), JoinLobbyInput: new(JoinLobbyInput)}
+	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: &textArea, WindowUpdation: new(WindowUpdation)}
 }
 
 func UpdateBackground(winConf *WindowConfig){
@@ -65,11 +81,14 @@ func UpdateBackground(winConf *WindowConfig){
 func DrawAllTextAreas(winConf *WindowConfig){
 	atlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
 	winConf.TextAreas.WriteIDTextArea = text.New(pixel.V(220, 460), atlas)
-	winConf.TextAreas.InputLobbyIDTextArea = text.New(pixel.V(285, 332), atlas)
+	winConf.TextAreas.CreateLobbyInput.InputLobbyIDTextArea = text.New(pixel.V(285, 332), atlas)
 	winConf.TextAreas.NewMembersAnnouncement = text.New(pixel.V(240, 495), atlas)
 	winConf.TextAreas.NewMembersTextArea = text.New(pixel.V(330, 410), atlas)
 	winConf.TextAreas.NewMembersTextArea.Color = colornames.Black
 	winConf.TextAreas.NewMembersTextArea.LineHeight = 18
+	winConf.TextAreas.CurrentLobbyIDArea = text.New(pixel.V(670, 20), atlas)
+	winConf.TextAreas.JoinLobbyInput.InputLobbyIDTextArea = text.New(pixel.V(300, 373), atlas)
+	winConf.TextAreas.JoinLobbyAnnouncement = text.New(pixel.V(270, 495), atlas)
 }
 
 
@@ -108,5 +127,19 @@ func LoadWaitRoomMenuBG(winConf *WindowConfig){
 func DrawWaitRoomMenuBG(winConf WindowConfig){
 	winConf.Win.Clear(colornames.Black)
 	sprite := pixel.NewSprite(winConf.BGImages.WaitRoomMenuBG, winConf.Win.Bounds())
+	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+}
+
+func LoadJoinLobbyMenu(winConf *WindowConfig){
+	image, err := Utils.LoadImage("SysImages/JoinLobbyMenu.png")
+	if err != nil{
+		panic(err)
+	}
+	winConf.BGImages.JoinLobbyMenuBG = image
+}
+
+func DrawJoinLobbyMenuBG(winConf WindowConfig){
+	winConf.Win.Clear(colornames.Black)
+	sprite := pixel.NewSprite(winConf.BGImages.JoinLobbyMenuBG, winConf.Win.Bounds())
 	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }

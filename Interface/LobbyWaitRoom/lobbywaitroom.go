@@ -62,7 +62,7 @@ func GetUpdates(userConfig *Users.User, waitRoom *Window.WaitRoom){
 			cleanedResp := CleanGottenResponse(string(buff))
 			splitedBuff := strings.Split(cleanedResp, "//")
 			for _, value := range splitedBuff{
-				if !ClientIsWritten(value, waitRoom) && len(waitRoom.NewMembers) <= 5{
+				if !ClientIsWritten(value, waitRoom) && len(waitRoom.NewMembers) <= 3{
 					waitRoom.NewMembers = append(waitRoom.NewMembers, value)
 				}
 			}
@@ -77,9 +77,6 @@ func CreateLobbyWaitRoom(winConf Window.WindowConfig, currState *Users.States, u
 	}
 	Window.DrawWaitRoomMenuBG(winConf)
 
-	//Listens to actions 
-
-	ListenForChanges(winConf, currState)
 	//Writes announcement for the waiting room
 	winConf.TextAreas.NewMembersAnnouncement.Clear()
 	winConf.TextAreas.NewMembersAnnouncement.Write([]byte("Wait for members!"))
@@ -90,14 +87,26 @@ func CreateLobbyWaitRoom(winConf Window.WindowConfig, currState *Users.States, u
 	for _, value := range waitRoom.NewMembers{
 		winConf.TextAreas.NewMembersTextArea.Write([]byte(value + "\n"))
 	}
-	winConf.TextAreas.NewMembersTextArea.Draw(winConf.Win, pixel.IM.Scaled(winConf.TextAreas.NewMembersTextArea.Orig, 2.5))
+	winConf.TextAreas.NewMembersTextArea.Draw(winConf.Win, pixel.IM.Scaled(winConf.TextAreas.NewMembersTextArea.Orig, 2.5)) 
+
+	winConf.TextAreas.CurrentLobbyIDArea.Clear()
+	lobbyIdText := fmt.Sprintf("Lobby ID is: %s", userConfig.LobbyID)
+	winConf.TextAreas.CurrentLobbyIDArea.Write([]byte(lobbyIdText))
+	winConf.TextAreas.CurrentLobbyIDArea.Draw(winConf.Win, pixel.IM.Scaled(winConf.TextAreas.CurrentLobbyIDArea.Orig, 2.5))
+
+	//Listens to actions
+	
+	ListenForChanges(winConf, currState)
 }
 
 func ListenForChanges(winConf Window.WindowConfig, currState *Users.States){
-	if winConf.WindowUpdation.Frame % 10 == 0{
+	if winConf.WindowUpdation.WaitRoomFrame % 8 == 0 && winConf.WindowUpdation.WaitRoomFrame != 0{
 		if (winConf.Win.MousePosition().X >= 361 && winConf.Win.MousePosition().X <= 596) && (winConf.Win.MousePosition().Y >= 73 && winConf.Win.MousePosition().Y <= 165) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
 			currState.SetGame()
 		}
+		if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 463 && winConf.Win.MousePosition().Y <= 507) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+			currState.SetCreateLobbyMenu()
+		}
 	}
-	winConf.WindowUpdation.Frame++
+	winConf.WindowUpdation.WaitRoomFrame++	
 }
