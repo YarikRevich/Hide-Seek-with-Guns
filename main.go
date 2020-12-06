@@ -1,33 +1,28 @@
 package main
 
 import (
+	"fmt"
 	"github.com/faiface/pixel/pixelgl"
-	_ "github.com/faiface/pixel"
 	"Game/Window"
 	"Game/Interface/Menu"
+	"Game/Interface/GameProcess"
 	"Game/Interface/CreationLobbyMenu"
 	"Game/Interface/LobbyWaitRoom"
 	"Game/Interface/JoinLobbyMenu"
 	"Game/Heroes/Users"
 	"Game/Server"
-	"fmt"
 )
 
-
-// func runConnectionWithServer(conn net.Conn, readWriteChan chan string){
-// 	//Gets dialed connection and reads all the messages 
-
-// 	go GetUpdates(conn, readWriteChan)
-// }
-
-//func SendNewConfig(parsedMessage string){}
-
-
-func startComponentsPackage(){}
-
-
-func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User, waitRoom *Window.WaitRoom){
-	//Choses action which refers to current state
+func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
+	/* It is a main action gate which choses an
+	   important menu to act and to draw. It can
+	   chose such menues as:
+	   - StartMenu 
+	   - CreateLobbyMenu
+	   - JoinLobbyMenu
+	   - WaitRoom
+	   - Game
+	*/
 	
 	if currState.StartMenu{
 		Menu.ListenForActions(*winConf, currState)
@@ -39,42 +34,50 @@ func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, user
 		JoinLobbyMenu.CreateJoinLobbyMenu(winConf, currState, userConfig)
 
 	}else if currState.WaitRoom{
-		LobbyWaitRoom.CreateLobbyWaitRoom(*winConf, currState, userConfig, waitRoom)
+		LobbyWaitRoom.CreateLobbyWaitRoom(winConf, currState, userConfig)
 
 	}else if currState.Game{
-		fmt.Println("game!")	
+		go GameProcess.CreateGame(userConfig, winConf)	
 	}
 }
 
 func run(){
-	//Creates window and does futher updations
+	/* It is a main game starting func.
+	   Firstly, it creates window with all the 
+	   settings, then, draws starting background image,
+	   and loads all the background images for all the 
+	   menues. Due to put information configurates user
+	   struction. Sets state-machine at the first state.
+	   Runs 'choseActionGate' which choses important menu
+	   to draw.
+	*/
+
+	fmt.Println("Write your username!")
+	var username string
+	fmt.Scan(&username)
 
 	winConf := Window.CreateWindow()
 	Window.DrawBackgroundImage(&winConf)
 	Window.LoadCreationLobbyMenuBG(&winConf)
 	Window.LoadJoinLobbyMenu(&winConf)
 	Window.LoadWaitRoomMenuBG(&winConf)
+	Window.LoadWaitRoomJoinBG(&winConf)
 	Window.DrawAllTextAreas(&winConf)
-	//Loads all the available hero images
-	//availableHeroImages := Utils.GetAvailableHeroImages()
-	//allSystemImages := Utils.LoadAllSystemImages()
-	//Runs connection with server
-	//readWriteChan := make(chan string)
+	Window.LoadAvailableHeroImages(&winConf)
 	conn := Server.GetConnection()
-	//go runConnectionWithServer(conn, readWriteChan)
-
+	
 	userConfig := Users.User{
+		Username: username,
 		Conn: conn, 
+		Game: &Users.Game{ReadWriteUpdate: make(chan string)},
 		HeroPicture: "user1",//Utils.GetRandomName(availableHeroImages),
 	}
+
 	CurrState := Users.States{StartMenu: true}
 
-	WaitRoom := Window.WaitRoom{}
-	//CreateLobby(&userConfig)
 	for !winConf.Win.Closed(){
 		Window.UpdateBackground(&winConf)
-		choseActionGate(&winConf, &CurrState, &userConfig, &WaitRoom)
-		//runMainPipeLine(readWriteChan, &userConfig, &winConf, availableHeroImages)
+		choseActionGate(&winConf, &CurrState, &userConfig)
 		winConf.Win.Update()
 	}
 }

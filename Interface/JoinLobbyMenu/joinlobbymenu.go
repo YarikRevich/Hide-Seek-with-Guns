@@ -1,11 +1,15 @@
 package JoinLobbyMenu
 
 import (
+	"strings"
 	"Game/Window"
 	"Game/Heroes/Users"
+	"Game/Utils"
 	"fmt"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+	"errors"
+	"time"
 )
 
 func RemoveIndex(s []string, index int)[]string{
@@ -33,21 +37,55 @@ func ChangeLobbyIDInputArea(winConf *Window.WindowConfig){
 func CheckBackButton(winConf *Window.WindowConfig, currState *Users.States){
 	if winConf.WindowUpdation.JoinLobbyMenuFrame % 8 == 0 && winConf.WindowUpdation.JoinLobbyMenuFrame != 0{
 		if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 468 && winConf.Win.MousePosition().Y <= 511) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+			winConf.TextAreas.JoinLobbyInput.WrittenText = []string{}
 			currState.SetStartMenu()
 		}
 	}
-	winConf.WindowUpdation.JoinLobbyMenuFrame++
-} 
-
-func CheckJoinButton(winConf Window.WindowConfig, currState *Users.States){
-	if (winConf.Win.MousePosition().X >= 363 && winConf.Win.MousePosition().X <= 596) && (winConf.Win.MousePosition().Y >= 73 && winConf.Win.MousePosition().Y <= 165) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-		fmt.Println("JoinButton pressed!")
-	}
 }
 
+func CheckErrorResp(userConfig *Users.User)bool{
+	buff := make([]byte, 144)
+	userConfig.Conn.Read(buff)
+	if !Utils.MessageIsEmpty(buff){
+		cleanedResp := Utils.CleanGottenResponse(string(buff))
+		splitedOne := strings.Split(cleanedResp, "@")
+		if len(splitedOne) > 1{
+			if splitedOne[0] == "error"{
+				return true
+			}
+		}
+		return false
+	}
+	return false
+}
+
+func CheckJoinButton(winConf Window.WindowConfig, currState *Users.States, userConfig *Users.User)error{
+	if (winConf.Win.MousePosition().X >= 363 && winConf.Win.MousePosition().X <= 596) && (winConf.Win.MousePosition().Y >= 73 && winConf.Win.MousePosition().Y <= 165) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+		lobbyIdToJoin := strings.Join(winConf.TextAreas.JoinLobbyInput.WrittenText, "")
+		userConfig.LobbyID = lobbyIdToJoin 
+		requestToAdd := fmt.Sprintf(
+			"AddToLobby///%s~/%s/%d/%d/%s", 
+			lobbyIdToJoin,
+			userConfig.Username,
+			userConfig.X,
+			userConfig.Y,
+			userConfig.HeroPicture,
+		)
+		userConfig.Conn.Write([]byte(requestToAdd))
+		if err := CheckErrorResp(userConfig); err{
+			return errors.New("Such lobby doesn't exist!")
+		}
+		winConf.WaitRoom.RoomType = "join"
+		currState.SetWaitRoom()
+		return nil
+	}
+	return nil
+}
 
 func CreateJoinLobbyMenu(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
 	Window.DrawJoinLobbyMenuBG(*winConf)
+
+	Window.DrawErrorText(winConf)
 
 	CheckBackButton(winConf, currState)
 
@@ -61,5 +99,11 @@ func CreateJoinLobbyMenu(winConf *Window.WindowConfig, currState *Users.States, 
 	ChangeLobbyIDInputArea(winConf)
 	winConf.TextAreas.JoinLobbyInput.InputLobbyIDTextArea.Draw(winConf.Win, pixel.IM.Scaled(winConf.TextAreas.JoinLobbyInput.InputLobbyIDTextArea.Orig, 3))
 
-	CheckJoinButton(*winConf, currState)
+
+	err := CheckJoinButton(*winConf, currState, userConfig)
+	if err != nil{
+		winConf.WindowError.LobbyDoesNotExist = true
+		winConf.WindowError.LobbyErrorStop = time.Now()
+		winConf.WindowError.LobbyErrorText = err.Error()
+	}
 }

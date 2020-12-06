@@ -5,15 +5,21 @@ import (
 )
 
 type User struct{
-	Username string
-	LobbyID string
-	Conn net.Conn
 	X int
 	Y int
+	Conn net.Conn
+	Game *Game
+	Username string
+	LobbyID string
 	HeroPicture string
+	UpdationRun int
 	CurrentFrame int
 	CurrentFrameMatrix []string
-	UpdationRun int
+}
+
+type Game struct{
+	GameStarted bool
+	ReadWriteUpdate chan string
 }
 
 type States struct{
@@ -25,6 +31,8 @@ type States struct{
 }
 
 func (s *States)SetStartMenu(){
+	// Sets state to 'StartMenu'
+
 	s.StartMenu = true
 	s.CreateLobbyMenu = false
 	s.JoinLobbyMenu = false
@@ -33,6 +41,8 @@ func (s *States)SetStartMenu(){
 }
 
 func (s *States)SetCreateLobbyMenu(){
+	//Sets state to 'CreateLobbyMenu'
+
 	s.StartMenu = false
 	s.CreateLobbyMenu = true
 	s.JoinLobbyMenu = false
@@ -41,6 +51,8 @@ func (s *States)SetCreateLobbyMenu(){
 }
 
 func (s *States)SetJoinLobbyMenu(){
+	//Sets state to 'JoinLobbyMenu'
+
 	s.StartMenu = false
 	s.CreateLobbyMenu = false
 	s.JoinLobbyMenu = true
@@ -49,6 +61,8 @@ func (s *States)SetJoinLobbyMenu(){
 }
 
 func (s *States)SetWaitRoom(){
+	//Sets state to 'WaitRoom'
+
 	s.StartMenu = false
 	s.CreateLobbyMenu = false
 	s.JoinLobbyMenu = false
@@ -57,6 +71,8 @@ func (s *States)SetWaitRoom(){
 }
 
 func (s *States)SetGame(){
+	//Sets state to 'Game'
+
 	s.StartMenu = false
 	s.CreateLobbyMenu = false
 	s.JoinLobbyMenu = false

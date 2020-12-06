@@ -1,6 +1,11 @@
-package ConfigParcers
+package ConfigParsers
 
-
+import (
+	"fmt"
+	"strconv"
+	"strings"
+	"Game/Heroes/Users"
+)
 
 func UnparseCurrent(response string, userConfig *Users.User){
 	splitedResp := strings.Split(response, "::/")

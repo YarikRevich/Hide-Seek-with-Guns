@@ -14,7 +14,6 @@ func RemoveIndex(s []string, index int)[]string{
 }
 
 func ChangeLobbyIDInputArea(winConf *Window.WindowConfig){
-
 	if winConf.Win.Pressed(pixelgl.KeyBackspace){
 		if winConf.WindowUpdation.CreationMenuFrame % 8 == 0{
 			if len(winConf.TextAreas.CreateLobbyInput.WrittenText) > 0{
@@ -34,10 +33,10 @@ func ChangeLobbyIDInputArea(winConf *Window.WindowConfig){
 func CheckBackButton(winConf Window.WindowConfig, currState *Users.States){
 	if winConf.WindowUpdation.CreationMenuFrame % 8 == 0 && winConf.WindowUpdation.CreationMenuFrame != 0{
 		if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 468 && winConf.Win.MousePosition().Y <= 511) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+			winConf.TextAreas.CreateLobbyInput.WrittenText = []string{}
 			currState.SetStartMenu()
 		}
 	}
-	winConf.WindowUpdation.CreationMenuFrame++
 } 
 
 func CheckCreateButton(winConf Window.WindowConfig, currState *Users.States, userConfig *Users.User){
@@ -45,10 +44,19 @@ func CheckCreateButton(winConf Window.WindowConfig, currState *Users.States, use
 		writtenID := strings.Join(winConf.TextAreas.CreateLobbyInput.WrittenText, "")
 		requestToCreate := fmt.Sprintf("CreateLobby///%s", writtenID)
 		userConfig.Conn.Write([]byte(requestToCreate))
-		requestToAdd := fmt.Sprintf("AddToLobby///%s", writtenID)
+		requestToAdd := fmt.Sprintf(
+			"AddToLobby///%s~/%s/%d/%d/%s", 
+			writtenID,
+			userConfig.Username,
+			userConfig.X,
+			userConfig.Y,
+			userConfig.HeroPicture,
+		)
 		userConfig.Conn.Write([]byte(requestToAdd))
 		userConfig.LobbyID = writtenID
+		winConf.WaitRoom.RoomType = "create"
 		currState.SetWaitRoom()
+		winConf.TextAreas.CreateLobbyInput.WrittenText = []string{}
 	}
 }
 

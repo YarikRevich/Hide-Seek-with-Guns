@@ -7,6 +7,7 @@ import (
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font/basicfont"
 	"Game/Utils"
+	"time"
 )
 
 
@@ -15,6 +16,7 @@ type MenuImages struct{
 	CreatioLobbyMenuBG pixel.Picture
 	JoinLobbyMenuBG pixel.Picture
 	WaitRoomMenuBG pixel.Picture
+	WaitRoomJoinBG pixel.Picture
 	Game pixel.Picture
 }
 
@@ -26,6 +28,7 @@ type TextAreas struct{
 	CurrentLobbyIDArea *text.Text
 	JoinLobbyAnnouncement *text.Text
 	JoinLobbyInput *JoinLobbyInput
+	LobbyDoesNotExistError *text.Text
 }
 
 type JoinLobbyInput struct{
@@ -46,8 +49,13 @@ type WindowUpdation struct{
 }
 
 type WaitRoom struct{
+	RoomType string
 	GettingUpdates bool
 	NewMembers []string
+}
+
+type Components struct{
+	AvailableHeroImages map[string]pixel.Picture
 }
 
 type WindowConfig struct{
@@ -55,6 +63,15 @@ type WindowConfig struct{
 	BGImages *MenuImages
 	TextAreas *TextAreas
 	WindowUpdation *WindowUpdation
+	Components *Components
+	WindowError *WindowError
+	WaitRoom *WaitRoom
+}
+
+type WindowError struct{
+	LobbyDoesNotExist bool
+	LobbyErrorStop time.Time
+	LobbyErrorText string
 }
 
 func CreateWindow()WindowConfig{
@@ -69,13 +86,28 @@ func CreateWindow()WindowConfig{
 		panic(err)
 	}
 	textArea := TextAreas{CreateLobbyInput: new(CreateLobbyInput), JoinLobbyInput: new(JoinLobbyInput)}
-	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: &textArea, WindowUpdation: new(WindowUpdation)}
+	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: &textArea, WindowUpdation: new(WindowUpdation), WindowError: new(WindowError), Components: new(Components), WaitRoom: new(WaitRoom)}
 }
 
 func UpdateBackground(winConf *WindowConfig){
 	winConf.Win.Clear(colornames.Black)
 	sprite := pixel.NewSprite(winConf.BGImages.StartMenuBG, winConf.BGImages.StartMenuBG.Bounds())
 	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+}
+
+func LoadAvailableHeroImages(winConf *WindowConfig){
+	winConf.Components.AvailableHeroImages = Utils.GetAvailableHeroImages()
+}
+
+func DrawErrorText(winConf *WindowConfig){
+	if winConf.WindowError.LobbyDoesNotExist{
+		end := time.Now()
+		if end.Sub(winConf.WindowError.LobbyErrorStop).Seconds() <= 2.0{
+			winConf.TextAreas.LobbyDoesNotExistError.Clear()
+	 		winConf.TextAreas.LobbyDoesNotExistError.Write([]byte(winConf.WindowError.LobbyErrorText))
+	  		winConf.TextAreas.LobbyDoesNotExistError.Draw(winConf.Win, pixel.IM.Scaled(winConf.TextAreas.LobbyDoesNotExistError.Orig, 2.5))
+		}
+	}
 }
 
 func DrawAllTextAreas(winConf *WindowConfig){
@@ -89,6 +121,7 @@ func DrawAllTextAreas(winConf *WindowConfig){
 	winConf.TextAreas.CurrentLobbyIDArea = text.New(pixel.V(670, 20), atlas)
 	winConf.TextAreas.JoinLobbyInput.InputLobbyIDTextArea = text.New(pixel.V(300, 373), atlas)
 	winConf.TextAreas.JoinLobbyAnnouncement = text.New(pixel.V(270, 495), atlas)
+	winConf.TextAreas.LobbyDoesNotExistError =  text.New(pixel.V(257, 250), atlas)
 }
 
 
@@ -141,5 +174,20 @@ func LoadJoinLobbyMenu(winConf *WindowConfig){
 func DrawJoinLobbyMenuBG(winConf WindowConfig){
 	winConf.Win.Clear(colornames.Black)
 	sprite := pixel.NewSprite(winConf.BGImages.JoinLobbyMenuBG, winConf.Win.Bounds())
+	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+}
+
+func LoadWaitRoomJoinBG(winConf *WindowConfig){
+	image, err := Utils.LoadImage("SysImages/WaitRoomJoin.png")
+	if err != nil{
+		panic(err)
+	}
+	winConf.BGImages.WaitRoomJoinBG = image
+
+}
+
+func DrawWaitRoomJoinBG(winConf WindowConfig){
+	winConf.Win.Clear(colornames.Black)
+	sprite := pixel.NewSprite(winConf.BGImages.WaitRoomJoinBG, winConf.Win.Bounds())
 	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
