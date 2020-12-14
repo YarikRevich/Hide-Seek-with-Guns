@@ -45,11 +45,13 @@ func CheckCreateButton(winConf Window.WindowConfig, currState *Users.States, use
 		requestToCreate := fmt.Sprintf("CreateLobby///%s", writtenID)
 		userConfig.Conn.Write([]byte(requestToCreate))
 		requestToAdd := fmt.Sprintf(
-			"AddToLobby///%s~/%s/%d/%d/%s", 
+			"AddToLobby///%s~/%s/%d/%d/%d/%d/0|0|0|0/%s", 
 			writtenID,
 			userConfig.Username,
 			userConfig.X,
 			userConfig.Y,
+			userConfig.UpdationRun,
+			userConfig.CurrentFrame,
 			userConfig.HeroPicture,
 		)
 		userConfig.Conn.Write([]byte(requestToAdd))

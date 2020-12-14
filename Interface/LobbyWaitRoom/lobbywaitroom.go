@@ -19,13 +19,16 @@ func ClientIsWritten(client string, winConf *Window.WindowConfig)bool{
 	return false
 }
 
-func GetUpdates(userConfig *Users.User, winConf *Window.WindowConfig){
-	for{
+func GetUpdates(userConfig *Users.User, winConf *Window.WindowConfig, currState *Users.States){
 		requestText := fmt.Sprintf("GetMembersInLobby///%s", userConfig.LobbyID)
 		userConfig.Conn.Write([]byte(requestText))
 		buff := make([]byte, 144)
 		userConfig.Conn.Read(buff)
 		if !Utils.MessageIsEmpty(buff){
+			if Utils.CheckErrorResp(string(buff)){
+				currState.SetGame()
+				return
+			}
 			cleanedResp := Utils.CleanGottenResponse(string(buff))
 			splitedBuff := strings.Split(cleanedResp, "//")
 			for _, value := range splitedBuff{
@@ -34,15 +37,11 @@ func GetUpdates(userConfig *Users.User, winConf *Window.WindowConfig){
 				}
 			}
 		}
-	}
 }
 
 func CreateLobbyWaitRoom(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
 	
-	if !winConf.WaitRoom.GettingUpdates{
-		go GetUpdates(userConfig, winConf)
-		winConf.WaitRoom.GettingUpdates = true
-	}
+	GetUpdates(userConfig, winConf, currState)
 
 	if winConf.WaitRoom.RoomType == "create"{
 		Window.DrawWaitRoomMenuBG(*winConf)
@@ -82,7 +81,6 @@ func ListenForChanges(winConf *Window.WindowConfig, userConfig *Users.User, curr
 			}
 		}
 		if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 463 && winConf.Win.MousePosition().Y <= 507) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-			winConf.WaitRoom.GettingUpdates = false
 			currState.SetCreateLobbyMenu()
 		}
 	}

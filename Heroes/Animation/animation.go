@@ -1,6 +1,7 @@
 package Animation
 
 import (
+	"Game/Window"
 	"fmt"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel"
@@ -75,7 +76,6 @@ func ConvertStringSliceToRect(StringSlice []string)pixel.Rect{
 	if err != nil{
 		panic(err)
 	}
-
 	return pixel.R(
 		MinX, MinY, MaxX, MaxY,
 	)
@@ -118,6 +118,6 @@ func ChangeAnimation(user *Users.User, image pixel.Picture, win *pixelgl.Window)
 	}
 }
 
-func MoveAndChangeAnim(userConfig *Users.User, win *pixelgl.Window, availableHeroImages map[string]pixel.Picture){
-	ChangeAnimation(userConfig, availableHeroImages[userConfig.HeroPicture], win)
+func MoveAndChangeAnim(userConfig *Users.User, winConf *Window.WindowConfig){
+	ChangeAnimation(userConfig, winConf.Components.AvailableHeroImages[userConfig.HeroPicture], winConf.Win)
 }

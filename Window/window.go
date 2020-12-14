@@ -191,3 +191,17 @@ func DrawWaitRoomJoinBG(winConf WindowConfig){
 	sprite := pixel.NewSprite(winConf.BGImages.WaitRoomJoinBG, winConf.Win.Bounds())
 	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
+
+func LoadGameBackground(winConf *WindowConfig){
+	image, err := Utils.LoadImage("SysImages/Game.png")
+	if err != nil{
+		panic(err)
+	}
+	winConf.BGImages.Game = image
+}
+
+func DrawGameBackground(winConf WindowConfig){
+	winConf.Win.Clear(colornames.Black)
+	sprite := pixel.NewSprite(winConf.BGImages.Game, winConf.Win.Bounds())
+	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+}

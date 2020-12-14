@@ -7,27 +7,36 @@ import (
 	"Game/Heroes/Users"
 )
 
+func IsUsersInfo(response string)bool{
+	if strings.Contains(response, "GetUsersInfo"){
+		return true
+	}
+	return false
+}
+
 func UnparseCurrent(response string, userConfig *Users.User){
-	splitedResp := strings.Split(response, "::/")
+	splitedResp := strings.Split(response, "/::/")
+	fmt.Println("CHOSEN ONE IS", splitedResp)
 	var chosenPart string
 	for _, value := range splitedResp{
 		if strings.Contains(value, userConfig.Username){
 			chosenPart = value
 		}
 	}
+	fmt.Println(chosenPart)
 	if strings.Contains(chosenPart, "~"){
 		chosenPart = strings.Split(chosenPart, "~")[1]
 	}
 	textToReturn := strings.Split(chosenPart, "/")
-	X, err := strconv.Atoi(textToReturn[0])
+	X, err := strconv.Atoi(textToReturn[1])
 	if err != nil{
 		panic(err)
 	}
-	Y, err := strconv.Atoi(textToReturn[1])
+	Y, err := strconv.Atoi(textToReturn[2])
 	if err != nil{
 		panic(err)
 	}
-	currentFrame, err := strconv.Atoi(textToReturn[2])
+	currentFrame, err := strconv.Atoi(textToReturn[4])
 	if err != nil{
 		panic(err)
 	}
@@ -35,7 +44,7 @@ func UnparseCurrent(response string, userConfig *Users.User){
 	if err != nil{
 		panic(err)
 	}
-	currentFrameMatrixSplited := strings.Split(textToReturn[4], "|")
+	currentFrameMatrixSplited := strings.Split(textToReturn[5], "|")
 	currentFrameMatrix := []string{
 		currentFrameMatrixSplited[0],
 		currentFrameMatrixSplited[1],
@@ -45,7 +54,7 @@ func UnparseCurrent(response string, userConfig *Users.User){
 
 	userConfig.X = X
 	userConfig.Y = Y
-	userConfig.HeroPicture = textToReturn[5]
+	userConfig.HeroPicture = textToReturn[6]
 	userConfig.CurrentFrame = currentFrame
 	userConfig.UpdationRun = updationRun
 	userConfig.CurrentFrameMatrix = currentFrameMatrix
@@ -53,21 +62,21 @@ func UnparseCurrent(response string, userConfig *Users.User){
 
 
 func UnparseOthers(response string, currentUser Users.User, otherUsers *[]*Users.User){
-	splitedLobbyID := strings.Split(response, "~")
-	splitedUsers := strings.Split(splitedLobbyID[1], "::/")
+	splitedUsers := strings.Split(response, "/::/")
 	for _, value := range splitedUsers{
 		if !strings.Contains(value, currentUser.Username){
 			splitedUserConf := strings.Split(value, "/")
-			newUser := Users.User{Username: splitedUserConf[len(splitedUserConf)-1]}
-			X, err := strconv.Atoi(splitedUserConf[0])
+			fmt.Println(splitedUserConf)
+			newUser := Users.User{Username: splitedUserConf[0]}
+			X, err := strconv.Atoi(splitedUserConf[1])
 			if err != nil{
 				panic(err)
 			}
-			Y, err := strconv.Atoi(splitedUserConf[1])
+			Y, err := strconv.Atoi(splitedUserConf[2])
 			if err != nil{
 				panic(err)
 			}
-			currentFrame, err := strconv.Atoi(splitedUserConf[2])
+			currentFrame, err := strconv.Atoi(splitedUserConf[4])
 			if err != nil{
 				panic(err)
 			}
@@ -75,7 +84,7 @@ func UnparseOthers(response string, currentUser Users.User, otherUsers *[]*Users
 			if err != nil{
 				panic(err)
 			}
-			currentFrameMatrixSplited := strings.Split(splitedUserConf[4], "|")
+			currentFrameMatrixSplited := strings.Split(splitedUserConf[5], "|")
 			currentFrameMatrix := []string{
 				currentFrameMatrixSplited[0],
 				currentFrameMatrixSplited[1],
@@ -86,7 +95,7 @@ func UnparseOthers(response string, currentUser Users.User, otherUsers *[]*Users
 			newUser.X = X
 			newUser.Y = Y
 			newUser.CurrentFrame = currentFrame
-			newUser.HeroPicture = splitedUserConf[5]
+			newUser.HeroPicture = splitedUserConf[6]
 			newUser.UpdationRun = updationRun
 			newUser.CurrentFrameMatrix = currentFrameMatrix
 			*otherUsers = append(*otherUsers, &newUser)
@@ -94,35 +103,18 @@ func UnparseOthers(response string, currentUser Users.User, otherUsers *[]*Users
 	}
 }
 
-func ParseConfig(currUser *Users.User, otherUsers []*Users.User, response string)string{
-	var result []string
-	lobbyNum := strings.Split(response, "~")[0]
-	result = append(result, fmt.Sprintf("UpdateUser///%s~%d/%d/%d/%d/%s|%s|%s|%s/%s/%s", 
-			lobbyNum, 
+func ParseConfig(currUser *Users.User)string{
+	return fmt.Sprintf("UpdateUser///%s~/%s/%d/%d/%d/%d/%s|%s|%s|%s/%s", 
+			currUser.LobbyID, 
+			currUser.Username,
 			currUser.X, 
 			currUser.Y, 
-			currUser.CurrentFrame, 
 			currUser.UpdationRun,
+			currUser.CurrentFrame, 
 			currUser.CurrentFrameMatrix[0],
 			currUser.CurrentFrameMatrix[1],
 			currUser.CurrentFrameMatrix[2],
 			currUser.CurrentFrameMatrix[3],
 			currUser.HeroPicture,
-			currUser.Username,
-		))
-	for _, value := range otherUsers{
-		result = append(result, fmt.Sprintf("%d/%d/%d/%d/%s|%s|%s|%s/%s/%s",  
-				value.X, 
-				value.Y, 
-				value.CurrentFrame, 
-				value.UpdationRun,
-				value.CurrentFrameMatrix[0],
-				value.CurrentFrameMatrix[1],
-				value.CurrentFrameMatrix[2],
-				value.CurrentFrameMatrix[3],
-				value.HeroPicture,
-				value.Username,
-		))
-	}
-	return strings.Join(result, "::/")
+		)
 }

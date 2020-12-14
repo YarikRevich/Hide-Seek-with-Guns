@@ -11,6 +11,14 @@ import (
 	"Game/Interface/JoinLobbyMenu"
 	"Game/Heroes/Users"
 	"Game/Server"
+	"Game/Utils"
+	"time"
+)
+
+var (
+	frames = 0
+	second = time.Tick(time.Second)
+
 )
 
 func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
@@ -37,7 +45,7 @@ func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, user
 		LobbyWaitRoom.CreateLobbyWaitRoom(winConf, currState, userConfig)
 
 	}else if currState.Game{
-		go GameProcess.CreateGame(userConfig, winConf)	
+		GameProcess.CreateGame(userConfig, winConf)	
 	}
 }
 
@@ -62,15 +70,18 @@ func run(){
 	Window.LoadJoinLobbyMenu(&winConf)
 	Window.LoadWaitRoomMenuBG(&winConf)
 	Window.LoadWaitRoomJoinBG(&winConf)
+	Window.LoadGameBackground(&winConf)
 	Window.DrawAllTextAreas(&winConf)
 	Window.LoadAvailableHeroImages(&winConf)
 	conn := Server.GetConnection()
+
 	
 	userConfig := Users.User{
 		Username: username,
 		Conn: conn, 
 		Game: &Users.Game{ReadWriteUpdate: make(chan string)},
-		HeroPicture: "user1",//Utils.GetRandomName(availableHeroImages),
+		HeroPicture: Utils.GetRandomHeroImage(winConf.Components.AvailableHeroImages),
+		CurrentFrameMatrix: []string{"0", "0", "0", "0"},
 	}
 
 	CurrState := Users.States{StartMenu: true}
@@ -79,6 +90,13 @@ func run(){
 		Window.UpdateBackground(&winConf)
 		choseActionGate(&winConf, &CurrState, &userConfig)
 		winConf.Win.Update()
+		frames++
+		select{
+		case <- second:
+			winConf.Win.SetTitle(fmt.Sprintf("Hide and seek|%d", frames))
+			frames = 0
+		default:
+		}
 	}
 }
 

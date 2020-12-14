@@ -1,6 +1,7 @@
 package Utils
 
 import (
+	"fmt"
 	"github.com/galsondor/go-ascii"
 	"time"
 	"math/rand"
@@ -24,37 +25,13 @@ func MessageIsEmpty(message []byte)bool{
 	return false
 }
 
-func SymbolIsAvailable(symbol string)bool{
-	//Checks whether passed symbol is an available symbol.
-
-	availableSymbols := []string{
-		"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ".", ":", "/", "@",
-	}
-	for _, value := range availableSymbols{
-		if value == symbol{
-			return true
-		}
-	}
-	return false
-}
-
 func CleanGottenResponse(resp string)string{
 	//Cleanes passed just returned resp and returns cleaned version.
 
-	cleanedResponse := ""
+	var cleanedResponse string
 	for _, value := range resp{
-		if strings.Split(resp, "@")[0] != "error"{
-			if SymbolIsAvailable(string(value)){
-				cleanedResponse += string(value)
-			}else{
-				return cleanedResponse
-			}
-		}else{
-			if ascii.IsASCII(byte(value)) || string(value) == "/"{
-				cleanedResponse += string(value)
-			}else{
-				return cleanedResponse
-			}
+		if ascii.IsPrint(byte(value)){
+			cleanedResponse += string(value)
 		}
 	}
 	return cleanedResponse
@@ -86,9 +63,10 @@ func GetRandomHeroImage(availableHeroImages map[string]pixel.Picture)string{
 	//Choses random hero image from the map of all the available hero images.
 
 	var imageNames []string
-	for key, _ := range availableHeroImages{
+	for key := range availableHeroImages{
 		imageNames = append(imageNames, key)
 	}
+	fmt.Println(imageNames)
 	return imageNames[GetRandNum(len(imageNames))]
 }
 
@@ -98,7 +76,8 @@ func GetAvailableHeroImages()map[string]pixel.Picture{
 	*/
 
 	listOfHeroes := make(map[string]pixel.Picture)
-	CommInstanse := exec.Command("ls")
+	CommInstanse := exec.Command("ls", "./SysImages")
+
 	result, err := CommInstanse.Output()
 	if err != nil{
 		panic(err)
@@ -106,9 +85,9 @@ func GetAvailableHeroImages()map[string]pixel.Picture{
 	splitedResults := strings.Split(string(result), "\n")
 	for _, value := range splitedResults{
 		if len(value) > 0{
-			if strings.HasSuffix(value, ".png"){
+			if strings.HasSuffix(value, ".png") && strings.Contains(value, "hero"){
 				fileName := strings.Split(value, ".")[0]
-				image, err := LoadImage(value)
+				image, err := LoadImage(fmt.Sprintf("./SysImages/%s", value))
 				if err != nil{
 					panic(err)
 				}
@@ -118,3 +97,16 @@ func GetAvailableHeroImages()map[string]pixel.Picture{
 	}
 	return listOfHeroes
 }
+
+func CheckErrorResp(resp string)bool{
+
+	cleanedResp := CleanGottenResponse(resp)
+	splitedOne := strings.Split(cleanedResp, "@")
+	if len(splitedOne) > 1{
+		if splitedOne[0] == "error"{
+			return true
+		}
+	}
+	return false
+}
+

@@ -43,41 +43,32 @@ func CheckBackButton(winConf *Window.WindowConfig, currState *Users.States){
 	}
 }
 
-func CheckErrorResp(userConfig *Users.User)bool{
-	buff := make([]byte, 144)
-	userConfig.Conn.Read(buff)
-	if !Utils.MessageIsEmpty(buff){
-		cleanedResp := Utils.CleanGottenResponse(string(buff))
-		splitedOne := strings.Split(cleanedResp, "@")
-		if len(splitedOne) > 1{
-			if splitedOne[0] == "error"{
-				return true
-			}
-		}
-		return false
-	}
-	return false
-}
-
 func CheckJoinButton(winConf Window.WindowConfig, currState *Users.States, userConfig *Users.User)error{
 	if (winConf.Win.MousePosition().X >= 363 && winConf.Win.MousePosition().X <= 596) && (winConf.Win.MousePosition().Y >= 73 && winConf.Win.MousePosition().Y <= 165) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
 		lobbyIdToJoin := strings.Join(winConf.TextAreas.JoinLobbyInput.WrittenText, "")
 		userConfig.LobbyID = lobbyIdToJoin 
 		requestToAdd := fmt.Sprintf(
-			"AddToLobby///%s~/%s/%d/%d/%s", 
+			"AddToLobby///%s~/%s/%d/%d/%d/%d/0|0|0|0/%s", 
 			lobbyIdToJoin,
 			userConfig.Username,
 			userConfig.X,
 			userConfig.Y,
+			userConfig.UpdationRun,
+			userConfig.CurrentFrame,
 			userConfig.HeroPicture,
 		)
 		userConfig.Conn.Write([]byte(requestToAdd))
-		if err := CheckErrorResp(userConfig); err{
-			return errors.New("Such lobby doesn't exist!")
+		buff := make([]byte, 144)
+		userConfig.Conn.Read(buff)
+		if !Utils.MessageIsEmpty(buff){
+			if Utils.CheckErrorResp(string(buff)){
+				return errors.New("Such lobby doesn't exist!")
+			}
+			winConf.WaitRoom.RoomType = "join"
+			currState.SetWaitRoom()
+			return nil
 		}
-		winConf.WaitRoom.RoomType = "join"
-		currState.SetWaitRoom()
-		return nil
+		return errors.New("message is empty!")
 	}
 	return nil
 }
