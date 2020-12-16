@@ -12,15 +12,44 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 )
 
-func KeyBoardButtonListener(userConfig *Users.User, win *pixelgl.Window){
-	if win.Pressed(pixelgl.KeyW){
-		userConfig.Y += 7
-	}else if win.Pressed(pixelgl.KeyA){
-		userConfig.X -= 7
-	}else if win.Pressed(pixelgl.KeyS){
-		userConfig.Y -= 7
-	}else if win.Pressed(pixelgl.KeyD){
-		userConfig.X += 7	
+func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig){
+
+	if winConf.Win.Pressed(pixelgl.KeyW){
+		if userConfig.Y <= int(winConf.BGImages.Game.Bounds().Max.Y-100){
+			userConfig.Y += 5
+		}
+		if (winConf.Cam.CamPos.Y*2) < winConf.BGImages.Game.Bounds().Max.Y{
+			if userConfig.Y >= int(winConf.Win.Bounds().Center().Y){
+				winConf.Cam.CamPos.Y += 5
+			}
+		}
+	}else if winConf.Win.Pressed(pixelgl.KeyA){
+		if userConfig.X >= -132{
+			userConfig.X -= 5
+		}
+		if winConf.Cam.CamPos.X >= (winConf.BGImages.Game.Bounds().Center().X/2){
+			if userConfig.X <= int(winConf.Win.Bounds().Center().X){
+				winConf.Cam.CamPos.X -= 5
+			}
+		}
+	}else if winConf.Win.Pressed(pixelgl.KeyS){
+		if userConfig.Y >= -61{
+			userConfig.Y -= 5
+		}
+		if winConf.Cam.CamPos.Y >= (winConf.BGImages.Game.Bounds().Center().Y/2){
+			if userConfig.Y <= int(winConf.Win.Bounds().Center().Y){	
+				winConf.Cam.CamPos.Y -= 5
+			}
+		}
+	}else if winConf.Win.Pressed(pixelgl.KeyD){
+		if userConfig.X <= int(winConf.BGImages.Game.Bounds().Max.X-220){
+			userConfig.X += 5
+		}
+		if (winConf.Cam.CamPos.X*2) != winConf.BGImages.Game.Bounds().Max.X{
+			if userConfig.X >= int(winConf.Win.Bounds().Center().X){	
+				winConf.Cam.CamPos.X += 5
+			}
+		}
 	} 
 }
 
@@ -31,7 +60,7 @@ func ReDraw(otherUsers *[]*Users.User, winConf *Window.WindowConfig){
 }
 
 func ChangePos(userConfig *Users.User, winConf *Window.WindowConfig){
-	KeyBoardButtonListener(userConfig, winConf.Win)
+	KeyBoardButtonListener(userConfig, winConf)
 	Animation.MoveAndChangeAnim(userConfig, winConf)
 }
 
@@ -63,4 +92,5 @@ func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig){
 			ReDraw(&otherUsers, winConf)
 		}
 	}
+	Window.UpdateCam(winConf)
 }

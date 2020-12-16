@@ -66,7 +66,6 @@ func GetRandomHeroImage(availableHeroImages map[string]pixel.Picture)string{
 	for key := range availableHeroImages{
 		imageNames = append(imageNames, key)
 	}
-	fmt.Println(imageNames)
 	return imageNames[GetRandNum(len(imageNames))]
 }
 

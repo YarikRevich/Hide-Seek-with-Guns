@@ -13,12 +13,13 @@ import (
 	"Game/Server"
 	"Game/Utils"
 	"time"
+	"os"
+	"log"
 )
 
 var (
 	frames = 0
 	second = time.Tick(time.Second)
-
 )
 
 func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
@@ -49,6 +50,13 @@ func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, user
 	}
 }
 
+func setAddSettings(userConfig Users.User, currState Users.States){
+	if len(os.Args) >= 2 && os.Args[1] == "stat"{
+		log.Println(userConfig)
+		log.Println(currState)
+	}
+}
+
 func run(){
 	/* It is a main game starting func.
 	   Firstly, it creates window with all the 
@@ -75,18 +83,25 @@ func run(){
 	Window.LoadAvailableHeroImages(&winConf)
 	conn := Server.GetConnection()
 
-	
+
 	userConfig := Users.User{
 		Username: username,
-		Conn: conn, 
+		Conn: conn,
+		X: int(winConf.BGImages.Game.Bounds().Center().X),
+		Y: int(winConf.BGImages.Game.Bounds().Center().Y),
 		Game: &Users.Game{ReadWriteUpdate: make(chan string)},
 		HeroPicture: Utils.GetRandomHeroImage(winConf.Components.AvailableHeroImages),
 		CurrentFrameMatrix: []string{"0", "0", "0", "0"},
 	}
 
+	Window.SetCam(&winConf, userConfig)
+
+
 	CurrState := Users.States{StartMenu: true}
 
+
 	for !winConf.Win.Closed(){
+		setAddSettings(userConfig, CurrState)
 		Window.UpdateBackground(&winConf)
 		choseActionGate(&winConf, &CurrState, &userConfig)
 		winConf.Win.Update()

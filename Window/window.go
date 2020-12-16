@@ -1,6 +1,7 @@
 package Window
 
 import (
+	"Game/Heroes/Users"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/text"
@@ -58,6 +59,11 @@ type Components struct{
 	AvailableHeroImages map[string]pixel.Picture
 }
 
+type Cam struct{
+	CamPos pixel.Vec
+	CamZoom float64
+}
+
 type WindowConfig struct{
 	Win *pixelgl.Window
 	BGImages *MenuImages
@@ -66,6 +72,7 @@ type WindowConfig struct{
 	Components *Components
 	WindowError *WindowError
 	WaitRoom *WaitRoom
+	Cam *Cam
 }
 
 type WindowError struct{
@@ -86,7 +93,17 @@ func CreateWindow()WindowConfig{
 		panic(err)
 	}
 	textArea := TextAreas{CreateLobbyInput: new(CreateLobbyInput), JoinLobbyInput: new(JoinLobbyInput)}
-	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: &textArea, WindowUpdation: new(WindowUpdation), WindowError: new(WindowError), Components: new(Components), WaitRoom: new(WaitRoom)}
+	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: &textArea, WindowUpdation: new(WindowUpdation), WindowError: new(WindowError), Components: new(Components), WaitRoom: new(WaitRoom), Cam: new(Cam)}
+}
+
+func SetCam(winConf *WindowConfig, userConfig Users.User){
+	winConf.Cam.CamPos = pixel.V(float64(userConfig.X), float64(userConfig.Y))
+	winConf.Cam.CamZoom = 1.0
+}
+
+func UpdateCam(winConf *WindowConfig){
+	Cam := pixel.IM.Scaled(winConf.Cam.CamPos, winConf.Cam.CamZoom).Moved(winConf.Win.Bounds().Center().Sub(winConf.Cam.CamPos))
+	winConf.Win.SetMatrix(Cam)
 }
 
 func UpdateBackground(winConf *WindowConfig){
@@ -202,6 +219,13 @@ func LoadGameBackground(winConf *WindowConfig){
 
 func DrawGameBackground(winConf WindowConfig){
 	winConf.Win.Clear(colornames.Black)
-	sprite := pixel.NewSprite(winConf.BGImages.Game, winConf.Win.Bounds())
+	sprite := pixel.NewSprite(
+		winConf.BGImages.Game, 
+		pixel.R(
+			winConf.BGImages.Game.Bounds().Min.X,
+			winConf.BGImages.Game.Bounds().Min.Y,
+			winConf.BGImages.Game.Bounds().Max.X,
+			winConf.BGImages.Game.Bounds().Max.Y, 
+		))
 	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
