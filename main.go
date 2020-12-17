@@ -12,9 +12,8 @@ import (
 	"Game/Heroes/Users"
 	"Game/Server"
 	"Game/Utils"
+	"Game/Utils/Log"
 	"time"
-	"os"
-	"log"
 )
 
 var (
@@ -32,28 +31,17 @@ func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, user
 	   - WaitRoom
 	   - Game
 	*/
-	
-	if currState.StartMenu{
+	switch{
+	case currState.StartMenu:
 		Menu.ListenForActions(*winConf, currState)
-
-	}else if currState.CreateLobbyMenu{
+	case currState.CreateLobbyMenu:
 		CreationLobbyMenu.CreateLobbyMakingMenu(winConf, currState, userConfig)
-
-	}else if currState.JoinLobbyMenu{
+	case currState.JoinLobbyMenu:
 		JoinLobbyMenu.CreateJoinLobbyMenu(winConf, currState, userConfig)
-
-	}else if currState.WaitRoom{
+	case currState.WaitRoom:
 		LobbyWaitRoom.CreateLobbyWaitRoom(winConf, currState, userConfig)
-
-	}else if currState.Game{
-		GameProcess.CreateGame(userConfig, winConf)	
-	}
-}
-
-func setAddSettings(userConfig Users.User, currState Users.States){
-	if len(os.Args) >= 2 && os.Args[1] == "stat"{
-		log.Println(userConfig)
-		log.Println(currState)
+	case currState.Game:
+		GameProcess.CreateGame(userConfig, winConf)
 	}
 }
 
@@ -99,9 +87,14 @@ func run(){
 
 	CurrState := Users.States{StartMenu: true}
 
+	log := Log.Logger(&Log.Log{})
+	log.Init(&userConfig)
 
 	for !winConf.Win.Closed(){
-		setAddSettings(userConfig, CurrState)
+
+		//Shows statistics about user if argument is placed
+		log.Show()
+
 		Window.UpdateBackground(&winConf)
 		choseActionGate(&winConf, &CurrState, &userConfig)
 		winConf.Win.Update()
