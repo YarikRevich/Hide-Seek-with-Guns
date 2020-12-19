@@ -13,6 +13,7 @@ import (
 	"Game/Server"
 	"Game/Utils"
 	"Game/Utils/Log"
+	"Game/Interface/GameProcess/Map"
 	"time"
 )
 
@@ -21,7 +22,7 @@ var (
 	second = time.Tick(time.Second)
 )
 
-func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
+func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User, camBorder Map.CamBorder){
 	/* It is a main action gate which choses an
 	   important menu to act and to draw. It can
 	   chose such menues as:
@@ -41,7 +42,7 @@ func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, user
 	case currState.WaitRoom:
 		LobbyWaitRoom.CreateLobbyWaitRoom(winConf, currState, userConfig)
 	case currState.Game:
-		GameProcess.CreateGame(userConfig, winConf)
+		GameProcess.CreateGame(userConfig, winConf, camBorder)
 	}
 }
 
@@ -71,21 +72,24 @@ func run(){
 	Window.LoadAvailableHeroImages(&winConf)
 	conn := Server.GetConnection()
 
+	randomSpawn := Utils.GetRandomSpawn()
 
 	userConfig := Users.User{
 		Username: username,
 		Conn: conn,
-		X: int(winConf.BGImages.Game.Bounds().Center().X),
-		Y: int(winConf.BGImages.Game.Bounds().Center().Y),
+		X: int(randomSpawn.X),
+		Y: int(randomSpawn.Y),
 		Game: &Users.Game{ReadWriteUpdate: make(chan string)},
 		HeroPicture: Utils.GetRandomHeroImage(winConf.Components.AvailableHeroImages),
 		CurrentFrameMatrix: []string{"0", "0", "0", "0"},
 	}
 
-	Window.SetCam(&winConf, userConfig)
-
-
 	CurrState := Users.States{StartMenu: true}
+
+	camBorder := Map.CamBorder(&Map.CB{})
+	camBorder.Init(winConf.BGImages.Game)
+
+	Window.SetCam(&winConf, userConfig, camBorder)
 
 	log := Log.Logger(&Log.Log{})
 	log.Init(&userConfig)
@@ -95,15 +99,15 @@ func run(){
 		//Shows statistics about user if argument is placed
 		log.Show()
 
-		Window.UpdateBackground(&winConf)
-		choseActionGate(&winConf, &CurrState, &userConfig)
-		winConf.Win.Update()
 		frames++
 		select{
 		case <- second:
-			winConf.Win.SetTitle(fmt.Sprintf("Hide and seek|%d", frames))
+			winConf.Win.SetTitle(fmt.Sprintf("Hide and seek| %d", frames))
 			frames = 0
 		default:
+			Window.UpdateBackground(&winConf)
+			choseActionGate(&winConf, &CurrState, &userConfig, camBorder)
+			winConf.Win.Update()
 		}
 	}
 }

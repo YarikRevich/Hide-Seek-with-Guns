@@ -1,6 +1,7 @@
 package Window
 
 import (
+	"fmt"
 	"Game/Heroes/Users"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel"
@@ -8,6 +9,7 @@ import (
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font/basicfont"
 	"Game/Utils"
+	"Game/Interface/GameProcess/Map"
 	"time"
 )
 
@@ -96,8 +98,71 @@ func CreateWindow()WindowConfig{
 	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: &textArea, WindowUpdation: new(WindowUpdation), WindowError: new(WindowError), Components: new(Components), WaitRoom: new(WaitRoom), Cam: new(Cam)}
 }
 
-func SetCam(winConf *WindowConfig, userConfig Users.User){
-	winConf.Cam.CamPos = pixel.V(float64(userConfig.X), float64(userConfig.Y))
+func collibrateBottom(borders Map.CamBorder, userConfig Users.User)float64{
+	bottom := borders.Bottom()
+	Y := userConfig.Y
+	for{
+		if float64(Y) >= bottom{
+			return float64(Y)
+		}
+		Y++
+	}
+}
+
+func collibrateTop(borders Map.CamBorder, userConfig Users.User)float64{
+	top := borders.Top()
+	Y := userConfig.Y
+	for{
+		if float64(Y) <= top{
+			return float64(Y)
+		}
+		Y--
+	}
+}
+
+func collibrateLeft(borders Map.CamBorder, userConfig Users.User)float64{
+	left := borders.Left()
+	X := userConfig.X
+	for{
+		if float64(X) >= left{
+			return float64(X)
+		}  
+		X++
+	}
+} 
+
+func collibrateRight(borders Map.CamBorder, userConfig Users.User)float64{
+	right := borders.Right()
+	fmt.Println(right)
+	X := userConfig.X
+	for{
+		if float64(X) <= right{
+			return float64(X)
+		}
+		X--
+	}
+}
+
+func collibrate(borders Map.CamBorder, userConfig Users.User)pixel.Vec{
+	var X float64
+	var Y float64
+	Y = collibrateBottom(borders, userConfig)
+	NewY := collibrateTop(borders, userConfig)
+	if NewY != float64(userConfig.Y){
+		Y = NewY
+	}
+	X = collibrateLeft(borders, userConfig)
+	NewX := collibrateRight(borders, userConfig)
+	if NewX != float64(userConfig.X){
+		X = NewX
+	}
+	return pixel.V(X, Y)
+
+}
+
+func SetCam(winConf *WindowConfig, userConfig Users.User, borders Map.CamBorder){
+	coords := collibrate(borders, userConfig)
+	winConf.Cam.CamPos = pixel.V(coords.X, coords.Y)
 	winConf.Cam.CamZoom = 1.0
 }
 

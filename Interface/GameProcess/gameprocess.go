@@ -14,18 +14,16 @@ import (
 	"Game/Interface/GameProcess/Map"
 )
 
-func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig){
+func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig, camBorder Map.CamBorder){
 
 	heroBorder := Map.HeroBorder(&Map.HB{})
 	heroBorder.Init(winConf.BGImages.Game)
-	camBorder := Map.CamBorder(&Map.CB{})
-	camBorder.Init(winConf.BGImages.Game)
 
 	if winConf.Win.Pressed(pixelgl.KeyW){
 		if userConfig.Y <= heroBorder.Top(){
 			userConfig.Y += 5
 		}
-		if (winConf.Cam.CamPos.Y*2) < camBorder.Top(){
+		if winConf.Cam.CamPos.Y < camBorder.Top(){
 			if userConfig.Y >= int(winConf.Win.Bounds().Center().Y){
 				winConf.Cam.CamPos.Y += 5
 			}
@@ -52,7 +50,7 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 		if userConfig.X <= heroBorder.Right(){
 			userConfig.X += 5
 		}
-		if (winConf.Cam.CamPos.X*2) != camBorder.Right(){
+		if winConf.Cam.CamPos.X <= camBorder.Right(){
 			if userConfig.X >= int(winConf.Win.Bounds().Center().X){	
 				winConf.Cam.CamPos.X += 5
 			}
@@ -78,8 +76,8 @@ func ReDraw(otherUsers *[]*Users.User, winConf *Window.WindowConfig){
 	}
 }
 
-func ChangePos(userConfig *Users.User, winConf *Window.WindowConfig){
-	KeyBoardButtonListener(userConfig, winConf)
+func ChangePos(userConfig *Users.User, winConf *Window.WindowConfig, camBorder Map.CamBorder){
+	KeyBoardButtonListener(userConfig, winConf, camBorder)
 	Animation.MoveAndChangeAnim(userConfig, winConf)
 }
 
@@ -90,7 +88,7 @@ func ListenToUsersInfo(userConfig *Users.User)string{
 	return string(buff)
 }
 
-func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig){
+func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig, camBorder Map.CamBorder){
 
 	formattedReq := fmt.Sprintf("GetUsersInfo///%s~", userConfig.LobbyID)
 	userConfig.Conn.Write([]byte(formattedReq))
@@ -99,7 +97,7 @@ func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig){
 
 
 	//Draws main hero
-	ChangePos(userConfig, winConf)
+	ChangePos(userConfig, winConf, camBorder)
 	parsedMessage := ConfigParsers.ParseConfig(userConfig)
 	userConfig.Conn.Write([]byte(parsedMessage))
 

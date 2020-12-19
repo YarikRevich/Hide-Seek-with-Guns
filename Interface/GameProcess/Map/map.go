@@ -22,19 +22,19 @@ func (b *HB)Init(FullMap pixel.Picture){
 }
 
 func (b HB)Right()int{
-	return int(b.FullMap.Bounds().Max.X-220)
+	return 1244
 }
 
 func (b HB)Left()int{
-	return -132
+	return -295
 }
 
 func (b HB)Top()int{
-	return int(b.FullMap.Bounds().Max.Y-100)
+	return 805
 }
 
 func (b HB)Bottom()int{
-	return -61
+	return -225
 }
 
 type CamBorder interface{
@@ -54,19 +54,19 @@ func (c *CB)Init(FullMap pixel.Picture){
 }
 
 func (c CB)Right()float64{
-	return c.FullMap.Bounds().Max.X
+	return 1244/1.65
 }
 
 func (c CB)Left()float64{
-	return c.FullMap.Bounds().Center().X/2
+	return c.FullMap.Bounds().Center().X/4.3
 }
 
 func (c CB)Top()float64{
-	return c.FullMap.Bounds().Max.Y
+	return 805/1.55
 }
 
 func (c CB)Bottom()float64{
-	return c.FullMap.Bounds().Center().Y/2
+	return c.FullMap.Bounds().Center().Y/17
 }
 
 type Collisions interface{
