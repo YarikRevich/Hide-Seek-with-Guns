@@ -33,7 +33,7 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 			}
 		}
 	}else if winConf.Win.Pressed(pixelgl.KeyA){
-		if collisions.IsCollision(pixel.V(float64(userConfig.X-3), float64(userConfig.Y))){
+		if collisions.IsCollision(pixel.V(float64(userConfig.X-2), float64(userConfig.Y))){
 			return
 		}
 		if userConfig.X >= heroBorder.Left(){
@@ -45,6 +45,9 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 			}
 		}
 	}else if winConf.Win.Pressed(pixelgl.KeyS){
+		if collisions.IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y-2))){
+			return
+		}
 		if userConfig.Y >= heroBorder.Bottom(){
 			userConfig.Y -= 3
 		}
@@ -54,7 +57,7 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 			}
 		}
 	}else if winConf.Win.Pressed(pixelgl.KeyD){
-		if collisions.IsCollision(pixel.V(float64(userConfig.X+3), float64(userConfig.Y))){
+		if collisions.IsCollision(pixel.V(float64(userConfig.X+2), float64(userConfig.Y))){
 			return
 		}
 		if userConfig.X <= heroBorder.Right(){

@@ -82,13 +82,14 @@ type C struct{
 
 func (c *C)Init(){
 	c.Colls = [][]pixel.Vec{
-		[]pixel.Vec{pixel.V(-86, 768), pixel.V(-86, 683)},
+		[]pixel.Vec{pixel.V(-84, 768), pixel.V(-84, 683)},
 		[]pixel.Vec{pixel.V(-49, 768), pixel.V(-49, 683)},
+		[]pixel.Vec{pixel.V(-79, 775), pixel.V(-55, 775)},
 	}
 }
 
 func (c C)Beetwen(x float64, cx float64)bool{
-	if (x >= (cx+8)) && (x <= (cx-8)){
+	if ((x >= (cx-8)) && (x <= cx)) || ((x >= (cx+8)) && (x <= cx)){
 		return true
 	}
 	return false
@@ -96,13 +97,12 @@ func (c C)Beetwen(x float64, cx float64)bool{
 
 func (c C)IsCollision(vector pixel.Vec)bool{
 	for _, vec := range c.Colls{
-		fmt.Println(c.Beetwen(vector.X, vec[0].X))
 		if c.Beetwen(vector.X, vec[0].X) && ((vec[0].Y >= vector.Y) && (vec[1].Y <= vector.Y)){
 			return true
 		}  
-		// if (((vector.X-20) <= vec.X) && ((vector.X+20) >= vec.X)) && (((vector.Y-20) <= vec.Y) && ((vector.Y+20) >= vec.Y)){ 
-		// 	return true
-		// }
+		if c.Beetwen(vector.X, vec[0].X) && ((vec[0].X >= vector.X) && (vec[1].X <= vector.X)){
+			return true
+		}  
 	}
 	return false
 }
