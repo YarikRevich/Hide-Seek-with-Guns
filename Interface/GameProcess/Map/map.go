@@ -71,23 +71,38 @@ func (c CB)Bottom()float64{
 
 type Collisions interface{
 	Init()
+	Beetwen(x float64, cx float64)bool
 	IsCollision(vector pixel.Vec) bool
 	React(vector pixel.Vec)
 }
 
 type C struct{
-	Colls []pixel.Vec
+	Colls [][]pixel.Vec
 }
 
 func (c *C)Init(){
-	c.Colls = []pixel.Vec{pixel.V(853, 434)}
+	c.Colls = [][]pixel.Vec{
+		[]pixel.Vec{pixel.V(-86, 768), pixel.V(-86, 683)},
+		[]pixel.Vec{pixel.V(-49, 768), pixel.V(-49, 683)},
+	}
+}
+
+func (c C)Beetwen(x float64, cx float64)bool{
+	if (x >= (cx+8)) && (x <= (cx-8)){
+		return true
+	}
+	return false
 }
 
 func (c C)IsCollision(vector pixel.Vec)bool{
 	for _, vec := range c.Colls{
-		if (((vector.X-20) <= vec.X) && ((vector.X+20) >= vec.X)) && (((vector.Y-20) <= vec.Y) && ((vector.Y+20) >= vec.Y)){ 
+		fmt.Println(c.Beetwen(vector.X, vec[0].X))
+		if c.Beetwen(vector.X, vec[0].X) && ((vec[0].Y >= vector.Y) && (vec[1].Y <= vector.Y)){
 			return true
-		}
+		}  
+		// if (((vector.X-20) <= vec.X) && ((vector.X+20) >= vec.X)) && (((vector.Y-20) <= vec.Y) && ((vector.Y+20) >= vec.Y)){ 
+		// 	return true
+		// }
 	}
 	return false
 }

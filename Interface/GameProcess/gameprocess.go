@@ -19,9 +19,13 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 	heroBorder := Map.HeroBorder(&Map.HB{})
 	heroBorder.Init(winConf.BGImages.Game)
 
+	collisions := Map.Collisions(&Map.C{})
+	collisions.Init()
+
+
 	if winConf.Win.Pressed(pixelgl.KeyW){
 		if userConfig.Y <= heroBorder.Top(){
-			userConfig.Y += 5
+			userConfig.Y += 3
 		}
 		if winConf.Cam.CamPos.Y < camBorder.Top(){
 			if userConfig.Y >= int(winConf.Win.Bounds().Center().Y){
@@ -29,8 +33,11 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 			}
 		}
 	}else if winConf.Win.Pressed(pixelgl.KeyA){
+		if collisions.IsCollision(pixel.V(float64(userConfig.X-3), float64(userConfig.Y))){
+			return
+		}
 		if userConfig.X >= heroBorder.Left(){
-			userConfig.X -= 5
+			userConfig.X -= 3
 		}
 		if winConf.Cam.CamPos.X >= camBorder.Left(){
 			if userConfig.X <= int(winConf.Win.Bounds().Center().X){
@@ -39,7 +46,7 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 		}
 	}else if winConf.Win.Pressed(pixelgl.KeyS){
 		if userConfig.Y >= heroBorder.Bottom(){
-			userConfig.Y -= 5
+			userConfig.Y -= 3
 		}
 		if winConf.Cam.CamPos.Y >= camBorder.Bottom(){
 			if userConfig.Y <= int(winConf.Win.Bounds().Center().Y){	
@@ -47,8 +54,11 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 			}
 		}
 	}else if winConf.Win.Pressed(pixelgl.KeyD){
+		if collisions.IsCollision(pixel.V(float64(userConfig.X+3), float64(userConfig.Y))){
+			return
+		}
 		if userConfig.X <= heroBorder.Right(){
-			userConfig.X += 5
+			userConfig.X += 3
 		}
 		if winConf.Cam.CamPos.X <= camBorder.Right(){
 			if userConfig.X >= int(winConf.Win.Bounds().Center().X){	
@@ -63,11 +73,9 @@ func ListenToCollisions(userConfig *Users.User){
 	//and due to them checks whether they
 	//are the collisions and does some changes.
 
-	collisions := Map.Collisions(&Map.C{})
-	collisions.Init()
-	if collisions.IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y))){
-		collisions.React(pixel.V(float64(userConfig.X), float64(userConfig.Y)))
-	}
+	// if collisions.IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y))){
+	// 	collisions.React(pixel.V(float64(userConfig.X), float64(userConfig.Y)))
+	// }
 }
 
 func ReDraw(otherUsers *[]*Users.User, winConf *Window.WindowConfig){
