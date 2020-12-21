@@ -17,13 +17,16 @@ import (
 func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig, camBorder Map.CamBorder){
 
 	heroBorder := Map.HeroBorder(&Map.HB{})
-	heroBorder.Init(winConf.BGImages.Game)
 
 	collisions := Map.Collisions(&Map.C{})
 	collisions.Init()
 
 
-	if winConf.Win.Pressed(pixelgl.KeyW){
+	switch {
+	case winConf.Win.Pressed(pixelgl.KeyW):
+		if collisions.IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y+2))){
+			return
+		}
 		if userConfig.Y <= heroBorder.Top(){
 			userConfig.Y += 3
 		}
@@ -32,7 +35,7 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 				winConf.Cam.CamPos.Y += 5
 			}
 		}
-	}else if winConf.Win.Pressed(pixelgl.KeyA){
+	case winConf.Win.Pressed(pixelgl.KeyA):
 		if collisions.IsCollision(pixel.V(float64(userConfig.X-2), float64(userConfig.Y))){
 			return
 		}
@@ -44,7 +47,7 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 				winConf.Cam.CamPos.X -= 5
 			}
 		}
-	}else if winConf.Win.Pressed(pixelgl.KeyS){
+	case winConf.Win.Pressed(pixelgl.KeyS):
 		if collisions.IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y-2))){
 			return
 		}
@@ -56,7 +59,7 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 				winConf.Cam.CamPos.Y -= 5
 			}
 		}
-	}else if winConf.Win.Pressed(pixelgl.KeyD){
+	case winConf.Win.Pressed(pixelgl.KeyD):
 		if collisions.IsCollision(pixel.V(float64(userConfig.X+2), float64(userConfig.Y))){
 			return
 		}
@@ -69,16 +72,6 @@ func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig
 			}
 		}
 	} 
-}
-
-func ListenToCollisions(userConfig *Users.User){
-	//Firstly looks at the hero's coords
-	//and due to them checks whether they
-	//are the collisions and does some changes.
-
-	// if collisions.IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y))){
-	// 	collisions.React(pixel.V(float64(userConfig.X), float64(userConfig.Y)))
-	// }
 }
 
 func ReDraw(otherUsers *[]*Users.User, winConf *Window.WindowConfig){
@@ -104,15 +97,13 @@ func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig, camBorder 
 	formattedReq := fmt.Sprintf("GetUsersInfo///%s~", userConfig.LobbyID)
 	userConfig.Conn.Write([]byte(formattedReq))
 	response := ListenToUsersInfo(userConfig)
-	Window.DrawGameBackground(*winConf)
+	winConf.DrawGameBackground()
 
 
 	//Draws main hero
 	ChangePos(userConfig, winConf, camBorder)
 	parsedMessage := ConfigParsers.ParseConfig(userConfig)
 	userConfig.Conn.Write([]byte(parsedMessage))
-
-	ListenToCollisions(userConfig)
 
 	if ConfigParsers.IsUsersInfo(response){
 		if cleaned := Utils.CleanGottenResponse(strings.Split(response, "~/")[1]); len(cleaned) != 0{
@@ -123,5 +114,5 @@ func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig, camBorder 
 			ReDraw(&otherUsers, winConf)
 		}
 	}
-	Window.UpdateCam(winConf)
+	winConf.UpdateCam()
 }

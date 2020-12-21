@@ -62,14 +62,14 @@ func run(){
 	fmt.Scan(&username)
 
 	winConf := Window.CreateWindow()
-	Window.DrawBackgroundImage(&winConf)
-	Window.LoadCreationLobbyMenuBG(&winConf)
-	Window.LoadJoinLobbyMenu(&winConf)
-	Window.LoadWaitRoomMenuBG(&winConf)
-	Window.LoadWaitRoomJoinBG(&winConf)
-	Window.LoadGameBackground(&winConf)
-	Window.DrawAllTextAreas(&winConf)
-	Window.LoadAvailableHeroImages(&winConf)
+	winConf.DrawBackgroundImage()
+	winConf.LoadCreationLobbyMenuBG()
+	winConf.LoadJoinLobbyMenu()
+	winConf.LoadWaitRoomMenuBG()
+	winConf.LoadWaitRoomJoinBG()
+	winConf.LoadGameBackground()
+	winConf.DrawAllTextAreas()
+	winConf.LoadAvailableHeroImages()
 	conn := Server.GetConnection()
 
 	randomSpawn := Utils.GetRandomSpawn()
@@ -89,7 +89,7 @@ func run(){
 	camBorder := Map.CamBorder(&Map.CB{})
 	camBorder.Init(winConf.BGImages.Game)
 
-	Window.SetCam(&winConf, userConfig, camBorder)
+	winConf.SetCam(userConfig, camBorder)
 
 	log := Log.Logger(&Log.Log{})
 	log.Init(&userConfig)
@@ -105,7 +105,7 @@ func run(){
 			winConf.Win.SetTitle(fmt.Sprintf("Hide and seek| %d", frames))
 			frames = 0
 		default:
-			Window.UpdateBackground(&winConf)
+			winConf.UpdateBackground()
 			choseActionGate(&winConf, &CurrState, &userConfig, camBorder)
 			winConf.Win.Update()
 		}

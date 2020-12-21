@@ -74,9 +74,9 @@ func CheckJoinButton(winConf Window.WindowConfig, currState *Users.States, userC
 }
 
 func CreateJoinLobbyMenu(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
-	Window.DrawJoinLobbyMenuBG(*winConf)
+	winConf.DrawJoinLobbyMenuBG()
 
-	Window.DrawErrorText(winConf)
+	winConf.DrawErrorText()
 
 	CheckBackButton(winConf, currState)
 

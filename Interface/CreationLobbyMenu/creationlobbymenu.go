@@ -65,7 +65,7 @@ func CheckCreateButton(winConf Window.WindowConfig, currState *Users.States, use
 func CreateLobbyMakingMenu(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
 
 	//Draws creation menu BG
-	Window.DrawCreationLobbyMenuBG(*winConf)
+	winConf.DrawCreationLobbyMenuBG()
 
 	//Checks whether back button is pressed
 

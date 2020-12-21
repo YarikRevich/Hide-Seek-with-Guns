@@ -1,7 +1,6 @@
 package Window
 
 import (
-	"fmt"
 	"Game/Heroes/Users"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel"
@@ -15,12 +14,12 @@ import (
 
 
 type MenuImages struct{
-	StartMenuBG pixel.Picture
-	CreatioLobbyMenuBG pixel.Picture
-	JoinLobbyMenuBG pixel.Picture
-	WaitRoomMenuBG pixel.Picture
-	WaitRoomJoinBG pixel.Picture
-	Game pixel.Picture
+	StartMenuBG *pixel.Sprite
+	CreatioLobbyMenuBG *pixel.Sprite
+	JoinLobbyMenuBG *pixel.Sprite
+	WaitRoomMenuBG *pixel.Sprite
+	WaitRoomJoinBG *pixel.Sprite
+	Game *pixel.Sprite
 }
 
 type TextAreas struct{
@@ -133,7 +132,6 @@ func collibrateLeft(borders Map.CamBorder, userConfig Users.User)float64{
 
 func collibrateRight(borders Map.CamBorder, userConfig Users.User)float64{
 	right := borders.Right()
-	fmt.Println(right)
 	X := userConfig.X
 	for{
 		if float64(X) <= right{
@@ -160,28 +158,27 @@ func collibrate(borders Map.CamBorder, userConfig Users.User)pixel.Vec{
 
 }
 
-func SetCam(winConf *WindowConfig, userConfig Users.User, borders Map.CamBorder){
+func (winConf *WindowConfig)SetCam(userConfig Users.User, borders Map.CamBorder){
 	coords := collibrate(borders, userConfig)
 	winConf.Cam.CamPos = pixel.V(coords.X, coords.Y)
 	winConf.Cam.CamZoom = 1.0
 }
 
-func UpdateCam(winConf *WindowConfig){
+func (winConf *WindowConfig)UpdateCam(){
 	Cam := pixel.IM.Scaled(winConf.Cam.CamPos, winConf.Cam.CamZoom).Moved(winConf.Win.Bounds().Center().Sub(winConf.Cam.CamPos))
 	winConf.Win.SetMatrix(Cam)
 }
 
-func UpdateBackground(winConf *WindowConfig){
+func (winConf *WindowConfig)UpdateBackground(){
 	winConf.Win.Clear(colornames.Black)
-	sprite := pixel.NewSprite(winConf.BGImages.StartMenuBG, winConf.BGImages.StartMenuBG.Bounds())
-	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+	winConf.BGImages.StartMenuBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
-func LoadAvailableHeroImages(winConf *WindowConfig){
+func (winConf *WindowConfig)LoadAvailableHeroImages(){
 	winConf.Components.AvailableHeroImages = Utils.GetAvailableHeroImages()
 }
 
-func DrawErrorText(winConf *WindowConfig){
+func (winConf *WindowConfig)DrawErrorText(){
 	if winConf.WindowError.LobbyDoesNotExist{
 		end := time.Now()
 		if end.Sub(winConf.WindowError.LobbyErrorStop).Seconds() <= 2.0{
@@ -192,7 +189,7 @@ func DrawErrorText(winConf *WindowConfig){
 	}
 }
 
-func DrawAllTextAreas(winConf *WindowConfig){
+func (winConf *WindowConfig)DrawAllTextAreas(){
 	atlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
 	winConf.TextAreas.WriteIDTextArea = text.New(pixel.V(220, 460), atlas)
 	winConf.TextAreas.CreateLobbyInput.InputLobbyIDTextArea = text.New(pixel.V(285, 332), atlas)
@@ -207,90 +204,91 @@ func DrawAllTextAreas(winConf *WindowConfig){
 }
 
 
-func DrawBackgroundImage(winConf *WindowConfig){
+func (winConf *WindowConfig)DrawBackgroundImage(){
 	//Draws background image 
 
 	image, err := Utils.LoadImage("SysImages/BackgroundImage.png")
 	if err != nil{
 		panic(err)
 	}
-	winConf.BGImages.StartMenuBG = image
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.StartMenuBG = sprite
 }
 
-func LoadCreationLobbyMenuBG(winConf *WindowConfig){
+func (winConf *WindowConfig)LoadCreationLobbyMenuBG(){
 	image, err := Utils.LoadImage("SysImages/CreatLobbImage.png")
 	if err != nil{
 		panic(err)
 	}
-	winConf.BGImages.CreatioLobbyMenuBG = image
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.CreatioLobbyMenuBG = sprite
 }
 
-func DrawCreationLobbyMenuBG(winConf WindowConfig){
+func (winConf *WindowConfig)DrawCreationLobbyMenuBG(){
 	winConf.Win.Clear(colornames.Black)
-	sprite := pixel.NewSprite(winConf.BGImages.CreatioLobbyMenuBG, winConf.Win.Bounds())
-	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+	winConf.BGImages.CreatioLobbyMenuBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
-func LoadWaitRoomMenuBG(winConf *WindowConfig){
+func (winConf *WindowConfig)LoadWaitRoomMenuBG(){
 	image, err := Utils.LoadImage("SysImages/WaitRoom.png")
 	if err != nil{
 		panic(err)
 	}
-	winConf.BGImages.WaitRoomMenuBG = image
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.WaitRoomMenuBG = sprite
 }
 
-func DrawWaitRoomMenuBG(winConf WindowConfig){
+func (winConf *WindowConfig)DrawWaitRoomMenuBG(){
 	winConf.Win.Clear(colornames.Black)
-	sprite := pixel.NewSprite(winConf.BGImages.WaitRoomMenuBG, winConf.Win.Bounds())
-	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+	winConf.BGImages.WaitRoomMenuBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
-func LoadJoinLobbyMenu(winConf *WindowConfig){
+func (winConf *WindowConfig)LoadJoinLobbyMenu(){
 	image, err := Utils.LoadImage("SysImages/JoinLobbyMenu.png")
 	if err != nil{
 		panic(err)
 	}
-	winConf.BGImages.JoinLobbyMenuBG = image
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.JoinLobbyMenuBG = sprite
 }
 
-func DrawJoinLobbyMenuBG(winConf WindowConfig){
+func (winConf *WindowConfig)DrawJoinLobbyMenuBG(){
 	winConf.Win.Clear(colornames.Black)
-	sprite := pixel.NewSprite(winConf.BGImages.JoinLobbyMenuBG, winConf.Win.Bounds())
-	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+	winConf.BGImages.JoinLobbyMenuBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
-func LoadWaitRoomJoinBG(winConf *WindowConfig){
+func (winConf *WindowConfig)LoadWaitRoomJoinBG(){
 	image, err := Utils.LoadImage("SysImages/WaitRoomJoin.png")
 	if err != nil{
 		panic(err)
 	}
-	winConf.BGImages.WaitRoomJoinBG = image
-
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.WaitRoomJoinBG = sprite
 }
 
-func DrawWaitRoomJoinBG(winConf WindowConfig){
+func (winConf *WindowConfig)DrawWaitRoomJoinBG(){
 	winConf.Win.Clear(colornames.Black)
-	sprite := pixel.NewSprite(winConf.BGImages.WaitRoomJoinBG, winConf.Win.Bounds())
-	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+	winConf.BGImages.WaitRoomJoinBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
-func LoadGameBackground(winConf *WindowConfig){
+func (winConf *WindowConfig)LoadGameBackground(){
 	image, err := Utils.LoadImage("SysImages/Game.png")
 	if err != nil{
 		panic(err)
 	}
-	winConf.BGImages.Game = image
+	sprite := pixel.NewSprite(
+		image, 
+		pixel.R(
+			image.Bounds().Min.X,
+			image.Bounds().Min.Y,
+			image.Bounds().Max.X,
+			image.Bounds().Max.Y, 
+		),
+	)
+	winConf.BGImages.Game = sprite
 }
 
-func DrawGameBackground(winConf WindowConfig){
+func (winConf *WindowConfig)DrawGameBackground(){
 	winConf.Win.Clear(colornames.Black)
-	sprite := pixel.NewSprite(
-		winConf.BGImages.Game, 
-		pixel.R(
-			winConf.BGImages.Game.Bounds().Min.X,
-			winConf.BGImages.Game.Bounds().Min.Y,
-			winConf.BGImages.Game.Bounds().Max.X,
-			winConf.BGImages.Game.Bounds().Max.Y, 
-		))
-	sprite.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+	winConf.BGImages.Game.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
