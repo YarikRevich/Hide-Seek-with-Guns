@@ -81,37 +81,28 @@ func ConvertStringSliceToRect(StringSlice []string)pixel.Rect{
 	)
 }
 
-// func ConvertCoordinatesToFloat(Coord string)float64{
-// 	result, err := strconv.ParseFloat(Coord, 64)
-// 	if err != nil{
-// 		panic(err)
-// 	}
-// 	return result
-// }
-
-func ChangeAnimation(user *Users.User, image pixel.Picture, win *pixelgl.Window){
-	sprite := pixel.NewSprite(nil, pixel.Rect{})
+func ChangeAnimation(user *Users.User, image *pixel.Sprite, win *pixelgl.Window){
 	user.UpdationRun++
 	if user.UpdationRun == 5{
 		user.UpdationRun = 0
 		user.CurrentFrameMatrix = ConvertToStringList(GetFrame(user))
 		if !CompareEqualBeetwenSlices(user.CurrentFrameMatrix, ConvertToStringList(pixel.R(0, 0, 0, 0))){
-			sprite.Set(image, ConvertStringSliceToRect(user.CurrentFrameMatrix))
-			sprite.Draw(win, pixel.IM.Moved(pixel.V(
+			image.Set(image.Picture(), ConvertStringSliceToRect(user.CurrentFrameMatrix))
+			image.Draw(win, pixel.IM.Moved(pixel.V(
 				float64(user.X),
 				float64(user.Y),
 			)))
 		}	
 	}
 	if !CompareEqualBeetwenSlices(user.CurrentFrameMatrix, ConvertToStringList(pixel.R(0, 0, 0, 0))){
-		sprite.Set(image, ConvertStringSliceToRect(user.CurrentFrameMatrix))
-		sprite.Draw(win, pixel.IM.Moved(pixel.V(
+		image.Set(image.Picture(), ConvertStringSliceToRect(user.CurrentFrameMatrix))
+		image.Draw(win, pixel.IM.Moved(pixel.V(
 			float64(user.X),
 			float64(user.Y),
 		)))
 	}else{
-		sprite.Set(image, getFrame(17, 50, .9, 0))
-		sprite.Draw(win, pixel.IM.Moved(pixel.V(
+		image.Set(image.Picture(), getFrame(17, 50, .9, 0))
+		image.Draw(win, pixel.IM.Moved(pixel.V(
 			float64(user.X),
 			float64(user.Y),
 		)))

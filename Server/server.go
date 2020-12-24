@@ -5,8 +5,13 @@ import (
 	"net"
 )
 
-func GetConnection()net.Conn{
-	conn, _ := net.Dial("udp", "127.0.0.1:9001")
+func GetConnection(adress string)net.Conn{
+	//Creates a connection for user
+
+	conn, err := net.Dial("udp", adress)
+	if err != nil{
+		panic(err)
+	}
 	conn.Write([]byte("!_"))
 	return conn
 }	

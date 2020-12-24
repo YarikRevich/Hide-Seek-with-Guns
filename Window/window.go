@@ -2,14 +2,15 @@ package Window
 
 import (
 	"Game/Heroes/Users"
-	"github.com/faiface/pixel/pixelgl"
+	"Game/Interface/GameProcess/Map"
+	"Game/Utils"
+	"time"
+
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font/basicfont"
-	"Game/Utils"
-	"Game/Interface/GameProcess/Map"
-	"time"
 )
 
 
@@ -20,6 +21,8 @@ type MenuImages struct{
 	WaitRoomMenuBG *pixel.Sprite
 	WaitRoomJoinBG *pixel.Sprite
 	Game *pixel.Sprite
+	HorDoor *pixel.Sprite
+	VerDoor *pixel.Sprite
 }
 
 type TextAreas struct{
@@ -57,7 +60,7 @@ type WaitRoom struct{
 }
 
 type Components struct{
-	AvailableHeroImages map[string]pixel.Picture
+	AvailableHeroImages map[string]*pixel.Sprite
 }
 
 type Cam struct{
@@ -291,4 +294,38 @@ func (winConf *WindowConfig)LoadGameBackground(){
 func (winConf *WindowConfig)DrawGameBackground(){
 	winConf.Win.Clear(colornames.Black)
 	winConf.BGImages.Game.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+}
+
+func (winConf *WindowConfig)LoadHorDoor(){
+	//Loads horizontal door
+
+	image, err := Utils.LoadImage("SysImages/HorDoor.png")
+	if err != nil{
+		panic(err)
+	}
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.HorDoor = sprite
+}
+
+func (winConf *WindowConfig)LoadVerDoor(){
+	//Loads vertical door
+	
+	image, err := Utils.LoadImage("SysImages/VerDoor.png")
+	if err != nil{
+		panic(err)
+	}
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.VerDoor = sprite
+}
+
+func (winConf WindowConfig)DrawHorDoor(coords pixel.Vec){
+	//Draws horizontal doors at passed coords
+
+	winConf.BGImages.HorDoor.Draw(winConf.Win, pixel.IM.Moved(coords))
+}
+
+func (winConf WindowConfig)DrawVerDoor(coords pixel.Vec){
+	//Draws vertical doors at passed coords
+
+	winConf.BGImages.VerDoor.Draw(winConf.Win, pixel.IM.Moved(coords))
 }

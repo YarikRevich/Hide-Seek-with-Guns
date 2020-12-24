@@ -16,14 +16,12 @@ func IsUsersInfo(response string)bool{
 
 func UnparseCurrent(response string, userConfig *Users.User){
 	splitedResp := strings.Split(response, "/::/")
-	fmt.Println("CHOSEN ONE IS", splitedResp)
 	var chosenPart string
 	for _, value := range splitedResp{
 		if strings.Contains(value, userConfig.Username){
 			chosenPart = value
 		}
 	}
-	fmt.Println(chosenPart)
 	if strings.Contains(chosenPart, "~"){
 		chosenPart = strings.Split(chosenPart, "~")[1]
 	}
@@ -66,7 +64,6 @@ func UnparseOthers(response string, currentUser Users.User, otherUsers *[]*Users
 	for _, value := range splitedUsers{
 		if !strings.Contains(value, currentUser.Username){
 			splitedUserConf := strings.Split(value, "/")
-			fmt.Println(splitedUserConf)
 			newUser := Users.User{Username: splitedUserConf[0]}
 			X, err := strconv.Atoi(splitedUserConf[1])
 			if err != nil{

@@ -1,27 +1,33 @@
 package GameProcess
 
 import (
-	"github.com/faiface/pixel"
-	"strings"
-	"Game/Utils"
-	"fmt"
-	_ "time"
-	"Game/Window"
-	"Game/Interface/GameProcess/ConfigParsers"
-	"Game/Heroes/Users"
 	"Game/Heroes/Animation"
-	"github.com/faiface/pixel/pixelgl"
+	"Game/Heroes/Users"
+	"Game/Interface/GameProcess/ConfigParsers"
 	"Game/Interface/GameProcess/Map"
+	"Game/Utils"
+	"Game/Window"
+	"fmt"
+	"strings"
+
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 )
 
 func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig, camBorder Map.CamBorder){
 
 	heroBorder := Map.HeroBorder(&Map.HB{})
 
-	collisions := Map.Collisions(&Map.C{})
+	CMap := new(Map.C)
+	collisions := Map.Collisions(CMap)
 	collisions.Init()
 
-
+	vector, _, ok := collisions.IsDoor(pixel.V(float64(userConfig.X), float64(userConfig.Y)))
+	if ok{
+		collisions.DeleteDoor(vector)
+	}
+	collisions.DrawDoors(winConf.DrawHorDoor, winConf.DrawVerDoor)
+	
 	switch {
 	case winConf.Win.Pressed(pixelgl.KeyW):
 		if collisions.IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y+2))){
@@ -102,6 +108,7 @@ func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig, camBorder 
 
 	//Draws main hero
 	ChangePos(userConfig, winConf, camBorder)
+	
 	parsedMessage := ConfigParsers.ParseConfig(userConfig)
 	userConfig.Conn.Write([]byte(parsedMessage))
 

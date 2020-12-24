@@ -1,26 +1,120 @@
 package main
 
 import (
-	"fmt"
-	"github.com/faiface/pixel/pixelgl"
-	"Game/Window"
-	"Game/Interface/Menu"
-	"Game/Interface/GameProcess"
-	"Game/Interface/CreationLobbyMenu"
-	"Game/Interface/LobbyWaitRoom"
-	"Game/Interface/JoinLobbyMenu"
 	"Game/Heroes/Users"
+	"Game/Interface/CreationLobbyMenu"
+	"Game/Interface/GameProcess"
+	"Game/Interface/GameProcess/Map"
+	"Game/Interface/JoinLobbyMenu"
+	"Game/Interface/LobbyWaitRoom"
+	"Game/Interface/Menu"
 	"Game/Server"
 	"Game/Utils"
 	"Game/Utils/Log"
-	"Game/Interface/GameProcess/Map"
+	"Game/Window"
+	"fmt"
+	"net"
+	"os"
+	"strconv"
+	"strings"
 	"time"
+
+	"github.com/faiface/pixel/pixelgl"
 )
 
 var (
 	frames = 0
 	second = time.Tick(time.Second)
 )
+
+func getMainServer()string{
+	file, err := os.OpenFile("config.txt", os.O_CREATE|os.O_RDONLY, 0755)
+	if err != nil{
+		panic(err)
+	}
+	buff := make([]byte, 4096)
+	file.Read(buff)
+	var cleanedBuff []byte
+	for _, value := range buff{
+		if value == 0{
+			continue
+		}
+		cleanedBuff = append(cleanedBuff, value)
+	}
+	if len(cleanedBuff) == 0{
+		fmt.Println("Config file is empty! Please write your own main server adress or copy it from the repo!")
+		os.Exit(0)
+	}
+	return string(cleanedBuff)
+}
+
+func connectToMainServer(adress string)*net.UDPConn{
+	splittedAdress := strings.Split(strings.Replace(adress, "\n", "", 1), ":")
+	ip, portStr := splittedAdress[0], splittedAdress[1]
+	port, err := strconv.Atoi(portStr)
+	if err != nil{
+		panic(err)
+	}
+	udpaddr := net.UDPAddr{
+		Port: port,
+		IP: net.ParseIP(ip),
+	}
+	conn, err := net.DialUDP("udp", nil, &udpaddr)
+	if err != nil{
+		panic(err)
+	}
+	return conn
+}
+
+func getAvailableServers(conn *net.UDPConn)map[int]string{
+	conn.Write([]byte("CheckServers"))
+	buff := make([]byte, 4096)
+	conn.Read(buff)
+	var cleanedBuff []byte
+	for _, value := range buff{
+		if value == 0{
+			continue
+		}
+		cleanedBuff = append(cleanedBuff, value)
+	}
+	result := map[int]string{}
+	for index, value := range strings.SplitAfter(string(cleanedBuff), " "){
+		result[index+1] = value
+	}
+	return result
+}
+
+func formatAvailableServersList(availableservers map[int]string){
+	for index, value := range availableservers{
+		ip := strings.Split(value, ":")[0]
+		fmt.Printf("=> %s: %d)\n", ip, index)
+	}
+}
+
+func choseCoresspondingServer(listServers map[int]string)string{
+	for{
+		fmt.Print("Write the number of server: ")
+		var server int
+		fmt.Scan(&server)
+		value, ok := listServers[server]
+		if ok{
+			return value
+		}
+		fmt.Println("Such one is not available!")
+	}
+}
+
+func getStartInfo()(string, string){
+	fmt.Println("Chose the server to play on!")
+	listServers := getAvailableServers(connectToMainServer(getMainServer()))
+	formatAvailableServersList(listServers)
+	server := choseCoresspondingServer(listServers)
+	fmt.Printf("Chosen server is %s\n", server)
+	fmt.Println("Write your username!")
+	var username string
+	fmt.Scan(&username)
+	return username, server
+}
 
 func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User, camBorder Map.CamBorder){
 	/* It is a main action gate which choses an
@@ -57,9 +151,7 @@ func run(){
 	   to draw.
 	*/
 
-	fmt.Println("Write your username!")
-	var username string
-	fmt.Scan(&username)
+	username, server := getStartInfo()
 
 	winConf := Window.CreateWindow()
 	winConf.DrawBackgroundImage()
@@ -68,9 +160,11 @@ func run(){
 	winConf.LoadWaitRoomMenuBG()
 	winConf.LoadWaitRoomJoinBG()
 	winConf.LoadGameBackground()
+	winConf.LoadHorDoor()
+	winConf.LoadVerDoor()
 	winConf.DrawAllTextAreas()
 	winConf.LoadAvailableHeroImages()
-	conn := Server.GetConnection()
+	conn := Server.GetConnection(server)
 
 	randomSpawn := Utils.GetRandomSpawn()
 

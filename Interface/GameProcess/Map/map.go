@@ -1,8 +1,7 @@
 package Map
 
 import (
-	"fmt"
-
+	"math"
 	"github.com/faiface/pixel"
 )
 
@@ -67,14 +66,14 @@ type Collisions interface{
 	Init()
 	Beetwen(x float64, cx float64)bool
 	IsCollision(vector pixel.Vec) bool
-	IsDoor(vector pixel.Vec)bool
-	DeleteDoor()
-	React(vector pixel.Vec)
+	IsDoor(vector pixel.Vec)(pixel.Vec, string, bool)
+	DeleteDoor(vector pixel.Vec)
+	DrawDoors(drawHor func(pixel.Vec), drawVer func(pixel.Vec))
 }
 
 type C struct{
 	Colls map[string][][]pixel.Vec
-	Doors [][]pixel.Vec
+	Doors map[string][]pixel.Vec
 }
 
 func (c *C)Init(){
@@ -89,8 +88,13 @@ func (c *C)Init(){
 				[]pixel.Vec{pixel.V(299, 760), pixel.V(299, 483)},
 				[]pixel.Vec{pixel.V(110, 670), pixel.V(110, 457)},
 				[]pixel.Vec{pixel.V(-145, 472), pixel.V(-145, 211)},
-				[]pixel.Vec{pixel.V(617, 227), pixel.V(617, -92)},
+				[]pixel.Vec{pixel.V(617, -92), pixel.V(617, -227)},
 				[]pixel.Vec{pixel.V(617, 13), pixel.V(617, -32)},
+				[]pixel.Vec{pixel.V(572, -92), pixel.V(572, -227)},
+				[]pixel.Vec{pixel.V(572, 31), pixel.V(572, -32)},
+				[]pixel.Vec{pixel.V(275, 319), pixel.V(275, 79)},
+				[]pixel.Vec{pixel.V(-107, 513), pixel.V(-107, 211)},
+				
 			},
 			"hor": [][]pixel.Vec{
 				[]pixel.Vec{pixel.V(-79, 775), pixel.V(-55, 775)},
@@ -109,11 +113,24 @@ func (c *C)Init(){
 				[]pixel.Vec{pixel.V(-244, 472), pixel.V(-139, 472)},
 				[]pixel.Vec{pixel.V(617, 10), pixel.V(895, 10)},
 				[]pixel.Vec{pixel.V(491, 40), pixel.V(581, 40)},
+				[]pixel.Vec{pixel.V(332, 37), pixel.V(437, 37)},
+				[]pixel.Vec{pixel.V(275, 79), pixel.V(437, 79)},
+				[]pixel.Vec{pixel.V(495, 79), pixel.V(570, 79)},
+				[]pixel.Vec{pixel.V(357, 205), pixel.V(568, 205)},
+				[]pixel.Vec{pixel.V(275, 205), pixel.V(297, 205)},
+				[]pixel.Vec{pixel.V(275, 241), pixel.V(297, 241)},
+				[]pixel.Vec{pixel.V(357, 241), pixel.V(568, 241)},
 			},
 	}
 
-	c.Doors = [][]pixel.Vec{
-		[]pixel.Vec{},
+	c.Doors = map[string][]pixel.Vec{
+		"hor": []pixel.Vec{
+			pixel.V(6.5, 641),
+		},
+		"ver": []pixel.Vec{
+			pixel.V(-68, 780),
+			pixel.V(278, 784),
+		},
 	}
 }
 
@@ -144,19 +161,36 @@ func (c C)IsCollision(vector pixel.Vec)bool{
 	return false
 }
 
-func (c C)IsDoor(vector pixel.Vec)bool{
+func (c C)IsDoor(vector pixel.Vec)(pixel.Vec, string, bool){
 	//Checks whether next position is a door 
 
-	for _, vec := range c.Doors{
-		if c.Beetwen(vector.X, vec[0].X) && ((vec[0].Y >= vector.Y) && (vec[1].Y <= vector.Y)){
-			return true
-		} 
+	for key, values := range c.Doors{
+		for _, value := range values{
+			if math.Abs(value.X - vector.X) <= 30 && math.Abs(value.Y - vector.Y) <= 60{
+				return value, key, true
+			}
+		}
 	}
-	return false
+	return vector, "-", false
 }
 
-func (c C)DeleteDoor(){}
+func (c *C)DeleteDoor(vector pixel.Vec){
+	for variant, values := range c.Doors{
+		for index, value := range values{
+			if value.Eq(vector){
+				c.Doors[variant] = append(values[:index], values[index+1:]...)
+			}
+		}
+	}
+}
 
-func (c C)React(vector pixel.Vec){
-	fmt.Println("You are at collision")
+func (c C)DrawDoors(drawHor func(pixel.Vec), drawVer func(pixel.Vec)){
+	hor := c.Doors["hor"]
+	ver := c.Doors["ver"]
+	for _, value := range hor{
+		drawHor(value)
+	}
+	for _, value := range ver{
+		drawVer(value)
+	}
 }

@@ -12,7 +12,6 @@ import (
 	"bytes"
 	_ "image/png"
 	"github.com/faiface/pixel"
-	_ "github.com/faiface/pixel/pixelgl"
 )
 
 func MessageIsEmpty(message []byte)bool{
@@ -59,7 +58,7 @@ func GetRandNum(max int)int{
 	return rand.Intn(max)
 }
 
-func GetRandomHeroImage(availableHeroImages map[string]pixel.Picture)string{
+func GetRandomHeroImage(availableHeroImages map[string]*pixel.Sprite)string{
 	//Choses random hero image from the map of all the available hero images.
 
 	var imageNames []string
@@ -69,12 +68,12 @@ func GetRandomHeroImage(availableHeroImages map[string]pixel.Picture)string{
 	return imageNames[GetRandNum(len(imageNames))]
 }
 
-func GetAvailableHeroImages()map[string]pixel.Picture{
+func GetAvailableHeroImages()map[string]*pixel.Sprite{
 	/* Saves to map all the available hero images in
 	   current directory. Choses files with png extension
 	*/
 
-	listOfHeroes := make(map[string]pixel.Picture)
+	listOfHeroes := make(map[string]*pixel.Sprite)
 	CommInstanse := exec.Command("ls", "./SysImages")
 
 	result, err := CommInstanse.Output()
@@ -90,7 +89,8 @@ func GetAvailableHeroImages()map[string]pixel.Picture{
 				if err != nil{
 					panic(err)
 				}
-				listOfHeroes[fileName] = image
+				sprite := pixel.NewSprite(image, image.Bounds())
+				listOfHeroes[fileName] = sprite
 			}
 		}
 	}
