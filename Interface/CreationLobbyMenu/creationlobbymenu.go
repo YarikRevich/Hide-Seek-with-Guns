@@ -39,26 +39,32 @@ func CheckBackButton(winConf Window.WindowConfig, currState *Users.States){
 	}
 } 
 
+func CreateAndAddToLobby(winConf Window.WindowConfig, userConfig *Users.User, currState *Users.States){
+	//Crates new lobby and adds new user to it.
+	
+	writtenID := strings.Join(winConf.TextAreas.CreateLobbyInput.WrittenText, "")
+	requestToCreate := fmt.Sprintf("CreateLobby///%s", writtenID)
+	userConfig.Conn.Write([]byte(requestToCreate))
+	requestToAdd := fmt.Sprintf(
+		"AddToLobby///%s~/%s/%d/%d/%d/%d/0|0|0|0/%s", 
+		writtenID,
+		userConfig.Username,
+		userConfig.X,
+		userConfig.Y,
+		userConfig.UpdationRun,
+		userConfig.CurrentFrame,
+		userConfig.HeroPicture,
+	)
+	userConfig.Conn.Write([]byte(requestToAdd))
+	userConfig.LobbyID = writtenID
+	winConf.WaitRoom.RoomType = "create"
+	currState.SetWaitRoom()
+	winConf.TextAreas.CreateLobbyInput.WrittenText = []string{}
+}
+
 func CheckCreateButton(winConf Window.WindowConfig, currState *Users.States, userConfig *Users.User){
 	if (winConf.Win.MousePosition().X >= 342 && winConf.Win.MousePosition().X <= 612) && (winConf.Win.MousePosition().Y >= 75 && winConf.Win.MousePosition().Y <= 172) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-		writtenID := strings.Join(winConf.TextAreas.CreateLobbyInput.WrittenText, "")
-		requestToCreate := fmt.Sprintf("CreateLobby///%s", writtenID)
-		userConfig.Conn.Write([]byte(requestToCreate))
-		requestToAdd := fmt.Sprintf(
-			"AddToLobby///%s~/%s/%d/%d/%d/%d/0|0|0|0/%s", 
-			writtenID,
-			userConfig.Username,
-			userConfig.X,
-			userConfig.Y,
-			userConfig.UpdationRun,
-			userConfig.CurrentFrame,
-			userConfig.HeroPicture,
-		)
-		userConfig.Conn.Write([]byte(requestToAdd))
-		userConfig.LobbyID = writtenID
-		winConf.WaitRoom.RoomType = "create"
-		currState.SetWaitRoom()
-		winConf.TextAreas.CreateLobbyInput.WrittenText = []string{}
+		CreateAndAddToLobby(winConf, userConfig, currState)
 	}
 }
 

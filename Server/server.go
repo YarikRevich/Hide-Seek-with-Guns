@@ -3,6 +3,7 @@ package Server
 
 import (
 	"net"
+	"time"
 )
 
 func GetConnection(adress string)net.Conn{
@@ -12,15 +13,7 @@ func GetConnection(adress string)net.Conn{
 	if err != nil{
 		panic(err)
 	}
+	conn.SetReadDeadline(time.Now().Add(6000 * time.Millisecond))
 	conn.Write([]byte("!_"))
 	return conn
 }	
-
-func GetUpdates(conn net.Conn, readWriteChan chan string){
-	conn.Write([]byte("UpdateUser///1~10/20/0/0/0|0|0|0/testhero/user1::/20/30/0/0/0|0|0|0/testhero/user2"))
-	for{
-		buff := make([]byte, 2048)
-		conn.Read(buff)
-		readWriteChan <- string(buff)
-	}
-}

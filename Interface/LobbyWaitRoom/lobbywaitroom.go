@@ -23,6 +23,7 @@ func GetUpdates(userConfig *Users.User, winConf *Window.WindowConfig, currState 
 		requestText := fmt.Sprintf("GetMembersInLobby///%s", userConfig.LobbyID)
 		userConfig.Conn.Write([]byte(requestText))
 		buff := make([]byte, 144)
+		//userConfig.Conn.SetReadDeadline(time.Now().Add(10 * time.Millisecond))
 		userConfig.Conn.Read(buff)
 		if !Utils.MessageIsEmpty(buff){
 			if Utils.CheckErrorResp(string(buff)){

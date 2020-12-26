@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/gookit/color"
 )
 
 var (
@@ -87,30 +88,31 @@ func getAvailableServers(conn *net.UDPConn)map[int]string{
 func formatAvailableServersList(availableservers map[int]string){
 	for index, value := range availableservers{
 		ip := strings.Split(value, ":")[0]
-		fmt.Printf("=> %s: %d)\n", ip, index)
+		pink := color.Magenta.Darken().Render
+		fmt.Printf("%s %s: %d)\n", pink("=>"), ip, index)
 	}
 }
 
 func choseCoresspondingServer(listServers map[int]string)string{
 	for{
-		fmt.Print("Write the number of server: ")
+		color.Yellow.Print("Write the number of server: ")
 		var server int
 		fmt.Scan(&server)
 		value, ok := listServers[server]
 		if ok{
 			return value
 		}
-		fmt.Println("Such one is not available!")
+		color.Red.Println("Such one is not available!")
 	}
 }
 
 func getStartInfo()(string, string){
-	fmt.Println("Chose the server to play on!")
+	color.Green.Println("Chose the server to play on!")
 	listServers := getAvailableServers(connectToMainServer(getMainServer()))
 	formatAvailableServersList(listServers)
 	server := choseCoresspondingServer(listServers)
-	fmt.Printf("Chosen server is %s\n", server)
-	fmt.Println("Write your username!")
+	fmt.Printf("Chosen server is %s\n", strings.Split(server, ":")[0])
+	color.Green.Println("Write your username!")
 	var username string
 	fmt.Scan(&username)
 	return username, server
@@ -208,4 +210,5 @@ func run(){
 
 func main(){
 	pixelgl.Run(run)
+	color.Green.Println("Goodbye!")
 }
