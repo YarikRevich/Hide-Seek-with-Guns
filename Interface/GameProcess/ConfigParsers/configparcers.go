@@ -100,6 +100,17 @@ func UnparseOthers(response string, currentUser Users.User, otherUsers *[]*Users
 	}
 }
 
+func UnparseUsers(response string)[]string{
+	cleanedResp := strings.Split(response, "~/")[1]
+	splitedUsers := strings.Split(cleanedResp, "/::/")
+	var result []string
+	for _, value := range splitedUsers{
+		splitedUserConf := strings.Split(value, "/")
+		result = append(result, splitedUserConf[0])
+	}
+	return result
+}
+
 func ParseConfig(currUser *Users.User)string{
 	return fmt.Sprintf("UpdateUser///%s~/%s/%d/%d/%d/%d/%s|%s|%s|%s/%s", 
 			currUser.LobbyID, 

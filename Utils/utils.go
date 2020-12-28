@@ -9,19 +9,19 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"bytes"
-	_ "image/png"
 	"github.com/faiface/pixel"
+	_ "image/png"
 )
 
 func MessageIsEmpty(message []byte)bool{
 	//Checks whether returned resp is empty
 
-	emptyMessage := make([]byte, 144)
-	if bytes.Compare(message, emptyMessage) == 0{
-		return true
+	for _, value := range message{
+		if value != 0{
+			return false
+		}
 	}
-	return false
+	return true
 }
 
 func CleanGottenResponse(resp string)string{
@@ -34,6 +34,13 @@ func CleanGottenResponse(resp string)string{
 		}
 	}
 	return cleanedResponse
+}
+
+func IsOkResp(resp string)bool{
+	if resp == "1"{
+		return true
+	}
+	return false
 }
 
 func LoadImage(path string)(pixel.Picture, error){

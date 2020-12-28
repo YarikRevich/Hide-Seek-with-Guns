@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/faiface/pixel"
 	"Game/Heroes/Users"
+	"Game/Utils"
 	"strings"
 )
 
@@ -42,7 +43,17 @@ func CheckBackButton(winConf Window.WindowConfig, currState *Users.States){
 func CreateAndAddToLobby(winConf Window.WindowConfig, userConfig *Users.User, currState *Users.States){
 	//Crates new lobby and adds new user to it.
 	
+}
+
+func CheckCreateButton(winConf Window.WindowConfig, currState *Users.States, userConfig *Users.User){
+	if (winConf.Win.MousePosition().X >= 342 && winConf.Win.MousePosition().X <= 612) && (winConf.Win.MousePosition().Y >= 75 && winConf.Win.MousePosition().Y <= 172) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+		winConf.Senders.CreateRoom = true
+	}
+}
+
+func SendWriteRequst(winConf *Window.WindowConfig, userConfig *Users.User, currState *Users.States){
 	writtenID := strings.Join(winConf.TextAreas.CreateLobbyInput.WrittenText, "")
+	userConfig.LobbyID = writtenID
 	requestToCreate := fmt.Sprintf("CreateLobby///%s", writtenID)
 	userConfig.Conn.Write([]byte(requestToCreate))
 	requestToAdd := fmt.Sprintf(
@@ -56,16 +67,12 @@ func CreateAndAddToLobby(winConf Window.WindowConfig, userConfig *Users.User, cu
 		userConfig.HeroPicture,
 	)
 	userConfig.Conn.Write([]byte(requestToAdd))
-	userConfig.LobbyID = writtenID
-	winConf.WaitRoom.RoomType = "create"
-	currState.SetWaitRoom()
-	winConf.TextAreas.CreateLobbyInput.WrittenText = []string{}
 }
 
-func CheckCreateButton(winConf Window.WindowConfig, currState *Users.States, userConfig *Users.User){
-	if (winConf.Win.MousePosition().X >= 342 && winConf.Win.MousePosition().X <= 612) && (winConf.Win.MousePosition().Y >= 75 && winConf.Win.MousePosition().Y <= 172) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-		CreateAndAddToLobby(winConf, userConfig, currState)
-	}
+func SendReadRequest(winConf *Window.WindowConfig, userConfig *Users.User, currState *Users.States)[]byte{
+	buff := make([]byte, 4096)
+	userConfig.Conn.Read(buff)
+	return buff
 }
 
 func CreateLobbyMakingMenu(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
@@ -91,4 +98,15 @@ func CreateLobbyMakingMenu(winConf *Window.WindowConfig, currState *Users.States
 	//Checks whether create lobby button is pressed
 
 	CheckCreateButton(*winConf, currState, userConfig)
+
+	if winConf.Senders.CreateRoom{
+		SendWriteRequst(winConf, userConfig, currState)
+		response := SendReadRequest(winConf, userConfig, currState)
+		if !Utils.MessageIsEmpty(response){
+			winConf.WaitRoom.RoomType = "create"
+			currState.SetWaitRoom()
+			winConf.Senders.CreateRoom = false
+			winConf.TextAreas.CreateLobbyInput.WrittenText = []string{}
+		}
+	}
 }

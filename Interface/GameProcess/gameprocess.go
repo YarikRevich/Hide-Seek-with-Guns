@@ -9,6 +9,7 @@ import (
 	"Game/Window"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -94,6 +95,7 @@ func ChangePos(userConfig *Users.User, winConf *Window.WindowConfig, camBorder M
 func ListenToUsersInfo(userConfig *Users.User)string{
 	
 	buff := make([]byte, 4096)
+	userConfig.Conn.SetReadDeadline(time.Now().Add(50 * time.Millisecond))
 	userConfig.Conn.Read(buff)
 	return string(buff)
 }
@@ -110,6 +112,7 @@ func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig, camBorder 
 	ChangePos(userConfig, winConf, camBorder)
 	
 	parsedMessage := ConfigParsers.ParseConfig(userConfig)
+	userConfig.Conn.SetWriteDeadline(time.Now().Add(50 * time.Millisecond))
 	userConfig.Conn.Write([]byte(parsedMessage))
 
 	if ConfigParsers.IsUsersInfo(response){

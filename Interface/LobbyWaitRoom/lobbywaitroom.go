@@ -7,6 +7,7 @@ import (
 	"Game/Window"
 	"Game/Heroes/Users"
 	"Game/Utils"
+	"Game/Interface/GameProcess/ConfigParsers"
 	"fmt"
 )
 
@@ -19,30 +20,36 @@ func ClientIsWritten(client string, winConf *Window.WindowConfig)bool{
 	return false
 }
 
-func GetUpdates(userConfig *Users.User, winConf *Window.WindowConfig, currState *Users.States){
-		requestText := fmt.Sprintf("GetMembersInLobby///%s", userConfig.LobbyID)
-		userConfig.Conn.Write([]byte(requestText))
-		buff := make([]byte, 144)
-		//userConfig.Conn.SetReadDeadline(time.Now().Add(10 * time.Millisecond))
-		userConfig.Conn.Read(buff)
-		if !Utils.MessageIsEmpty(buff){
-			if Utils.CheckErrorResp(string(buff)){
+func ListenForChanges(winConf *Window.WindowConfig, userConfig *Users.User, currState *Users.States){
+	if winConf.WindowUpdation.WaitRoomFrame % 8 == 0 && winConf.WindowUpdation.WaitRoomFrame != 0{
+		switch winConf.WaitRoom.RoomType {
+		case "create":
+			if (winConf.Win.MousePosition().X >= 361 && winConf.Win.MousePosition().X <= 596) && (winConf.Win.MousePosition().Y >= 73 && winConf.Win.MousePosition().Y <= 165) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+				formattedReq := fmt.Sprintf("ClosePreparingLobby///%s~", userConfig.LobbyID)
+				userConfig.Conn.Write([]byte(formattedReq))
 				currState.SetGame()
-				return
 			}
-			cleanedResp := Utils.CleanGottenResponse(string(buff))
-			splitedBuff := strings.Split(cleanedResp, "//")
-			for _, value := range splitedBuff{
-				if !ClientIsWritten(value, winConf) && len(winConf.WaitRoom.NewMembers) <= 3{
-					winConf.WaitRoom.NewMembers = append(winConf.WaitRoom.NewMembers, value)
-				}
-			}
+		case "join":
+			if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 463 && winConf.Win.MousePosition().Y <= 507) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+				currState.SetCreateLobbyMenu()
+			}	
 		}
+	}
+	winConf.WindowUpdation.WaitRoomFrame++	
+}
+
+func SendWriteRequest(winConf *Window.WindowConfig, userConfig *Users.User, currState *Users.States){
+	requestText := fmt.Sprintf("GetUsersInfoLobby///%s", userConfig.LobbyID)
+	userConfig.Conn.Write([]byte(requestText))
+}
+
+func SendReadRequest(winConf *Window.WindowConfig, userConfig *Users.User, currState *Users.States)[]byte{
+	buff := make([]byte, 4096)
+	userConfig.Conn.Read(buff)
+	return buff
 }
 
 func CreateLobbyWaitRoom(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
-	
-	GetUpdates(userConfig, winConf, currState)
 
 	switch winConf.WaitRoom.RoomType{
 	case "create":
@@ -67,25 +74,23 @@ func CreateLobbyWaitRoom(winConf *Window.WindowConfig, currState *Users.States, 
 	winConf.TextAreas.CurrentLobbyIDArea.Write([]byte(lobbyIdText))
 	winConf.TextAreas.CurrentLobbyIDArea.Draw(winConf.Win, pixel.IM.Scaled(winConf.TextAreas.CurrentLobbyIDArea.Orig, 2.5))
 
-	//Listens to actions
-
 	ListenForChanges(winConf, userConfig, currState)
-}
 
-func ListenForChanges(winConf *Window.WindowConfig, userConfig *Users.User, currState *Users.States){
-	if winConf.WindowUpdation.WaitRoomFrame % 8 == 0 && winConf.WindowUpdation.WaitRoomFrame != 0{
-		switch winConf.WaitRoom.RoomType {
-		case "create":
-			if (winConf.Win.MousePosition().X >= 361 && winConf.Win.MousePosition().X <= 596) && (winConf.Win.MousePosition().Y >= 73 && winConf.Win.MousePosition().Y <= 165) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-				formattedReq := fmt.Sprintf("ClosePreparingLobby///%s~", userConfig.LobbyID)
-				userConfig.Conn.Write([]byte(formattedReq))
-				currState.SetGame()
+	SendWriteRequest(winConf, userConfig, currState)
+	response := SendReadRequest(winConf, userConfig, currState)
+	if !Utils.MessageIsEmpty(response){
+		if Utils.CheckErrorResp(string(response)){
+			currState.SetGame()
+		}else{
+			cleanedResp := Utils.CleanGottenResponse(string(response))
+			if !Utils.IsOkResp(cleanedResp){
+				unpursedUsers := ConfigParsers.UnparseUsers(cleanedResp)
+				for _, value := range unpursedUsers{
+					if !ClientIsWritten(value, winConf) && len(winConf.WaitRoom.NewMembers) <= 3{
+						winConf.WaitRoom.NewMembers = append(winConf.WaitRoom.NewMembers, value)
+					}
+				}
 			}
-		case "join":
-			if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 463 && winConf.Win.MousePosition().Y <= 507) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-				currState.SetCreateLobbyMenu()
-			}	
 		}
 	}
-	winConf.WindowUpdation.WaitRoomFrame++	
 }

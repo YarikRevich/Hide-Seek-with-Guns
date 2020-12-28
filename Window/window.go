@@ -76,6 +76,7 @@ type WindowConfig struct{
 	Components *Components
 	WindowError *WindowError
 	WaitRoom *WaitRoom
+	Senders *Senders
 	Cam *Cam
 }
 
@@ -83,6 +84,11 @@ type WindowError struct{
 	LobbyDoesNotExist bool
 	LobbyErrorStop time.Time
 	LobbyErrorText string
+}
+
+type Senders struct{
+	JoinRoom bool
+	CreateRoom bool
 }
 
 func CreateWindow()WindowConfig{
@@ -97,7 +103,7 @@ func CreateWindow()WindowConfig{
 		panic(err)
 	}
 	textArea := TextAreas{CreateLobbyInput: new(CreateLobbyInput), JoinLobbyInput: new(JoinLobbyInput)}
-	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: &textArea, WindowUpdation: new(WindowUpdation), WindowError: new(WindowError), Components: new(Components), WaitRoom: new(WaitRoom), Cam: new(Cam)}
+	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: &textArea, WindowUpdation: new(WindowUpdation), WindowError: new(WindowError), Components: new(Components), WaitRoom: new(WaitRoom), Cam: new(Cam), Senders: new(Senders)}
 }
 
 func collibrateBottom(borders Map.CamBorder, userConfig Users.User)float64{

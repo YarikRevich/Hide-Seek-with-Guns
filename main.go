@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"errors"
 
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/gookit/color"
@@ -61,6 +62,8 @@ func connectToMainServer(adress string)*net.UDPConn{
 		IP: net.ParseIP(ip),
 	}
 	conn, err := net.DialUDP("udp", nil, &udpaddr)
+	conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
+	conn.SetWriteDeadline(time.Now().Add(1000 * time.Millisecond))
 	if err != nil{
 		panic(err)
 	}
@@ -85,12 +88,18 @@ func getAvailableServers(conn *net.UDPConn)map[int]string{
 	return result
 }
 
-func formatAvailableServersList(availableservers map[int]string){
+func formatAvailableServersList(availableservers map[int]string)error{
+	value, _ := availableservers[1]
+	if len(availableservers) == 1 && len(value) == 0{
+		color.Red.Println("There are no available servers right now!")
+		return errors.New("there are no available server")
+	}
 	for index, value := range availableservers{
 		ip := strings.Split(value, ":")[0]
 		pink := color.Magenta.Darken().Render
 		fmt.Printf("%s %s: %d)\n", pink("=>"), ip, index)
 	}
+	return nil
 }
 
 func choseCoresspondingServer(listServers map[int]string)string{
@@ -109,9 +118,12 @@ func choseCoresspondingServer(listServers map[int]string)string{
 func getStartInfo()(string, string){
 	color.Green.Println("Chose the server to play on!")
 	listServers := getAvailableServers(connectToMainServer(getMainServer()))
-	formatAvailableServersList(listServers)
-	server := choseCoresspondingServer(listServers)
-	fmt.Printf("Chosen server is %s\n", strings.Split(server, ":")[0])
+	err := formatAvailableServersList(listServers)
+	var server string
+	if err == nil{
+		server = choseCoresspondingServer(listServers)
+		fmt.Printf("Chosen server is %s\n", strings.Split(server, ":")[0])
+	}
 	color.Green.Println("Write your username!")
 	var username string
 	fmt.Scan(&username)
@@ -189,12 +201,12 @@ func run(){
 
 	log := Log.Logger(&Log.Log{})
 	log.Init(&userConfig)
-
+	go log.GetPing()
 	for !winConf.Win.Closed(){
 
 		//Shows statistics about user if argument is placed
 		log.Show()
-
+	
 		frames++
 		select{
 		case <- second:
