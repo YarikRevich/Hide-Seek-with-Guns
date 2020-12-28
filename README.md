@@ -29,6 +29,7 @@ git init && git pull **this repo** master
 Download important dependences 
 ```
 go get github.com/galsondor/go-ascii
+go get github.com/go-ping/ping
 ```
 
 Then compile project due to the command beneath
