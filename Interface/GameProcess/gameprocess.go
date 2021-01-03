@@ -98,7 +98,7 @@ func ChangePos(userConfig *Users.User, winConf *Window.WindowConfig, mapComponen
 func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig, states *States.States, mapComponents Map.MapConf){
 
 	server := Server.Network(new(Server.N))
-	server.Init(fmt.Sprintf("GetUsersInfo///%s~", userConfig.LobbyID), userConfig.Conn)
+	server.Init(fmt.Sprintf("GetUsersInfo///%s~", userConfig.LobbyID), userConfig.Conn, 0)
 	server.Write()
 	response := server.Read()
 
@@ -112,7 +112,7 @@ func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig, states *St
 	ChangePos(userConfig, winConf, mapComponents)
 	//winConf.DrawGoldChest() : It is testing now :)
 
-	server.Init(ConfigParsers.ParseConfig(userConfig), userConfig.Conn)
+	server.Init(ConfigParsers.ParseConfig(userConfig), userConfig.Conn, 0)
 	server.Write()
 
 	if ConfigParsers.IsUsersInfo(string(response)){

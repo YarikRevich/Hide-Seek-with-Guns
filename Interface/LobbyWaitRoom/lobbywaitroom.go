@@ -28,14 +28,14 @@ func ListenForChanges(winConf *Window.WindowConfig, userConfig *Users.User, curr
 		switch winConf.WaitRoom.RoomType {
 		case "create":
 			if (winConf.Win.MousePosition().X >= 361 && winConf.Win.MousePosition().X <= 596) && (winConf.Win.MousePosition().Y >= 73 && winConf.Win.MousePosition().Y <= 165) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-				server.Init(fmt.Sprintf("ClosePreparingLobby///%s~", userConfig.LobbyID), userConfig.Conn)
+				server.Init(fmt.Sprintf("ClosePreparingLobby///%s~", userConfig.LobbyID), userConfig.Conn, 1)
 				server.Write()
 				server.Read()
 				currState.SetGame()
 			}
 			if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 463 && winConf.Win.MousePosition().Y <= 507) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
 				currState.SetCreateLobbyMenu()
-				server.Init(fmt.Sprintf("DeleteLobby///%s", userConfig.LobbyID), userConfig.Conn)
+				server.Init(fmt.Sprintf("DeleteLobby///%s", userConfig.LobbyID), userConfig.Conn, 1)
 				server.Write()
 				server.Read()
 			}
@@ -76,7 +76,7 @@ func CreateLobbyWaitRoom(winConf *Window.WindowConfig, currState *States.States,
 	ListenForChanges(winConf, userConfig, currState)
 
 	server := Server.Network(new(Server.N))
-	server.Init(fmt.Sprintf("GetUsersInfoLobby///%s", userConfig.LobbyID), userConfig.Conn)
+	server.Init(fmt.Sprintf("GetUsersInfoLobby///%s", userConfig.LobbyID), userConfig.Conn, 0)
 	server.Write()
 	response := server.Read()
 

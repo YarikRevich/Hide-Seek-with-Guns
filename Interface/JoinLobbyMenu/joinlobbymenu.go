@@ -87,6 +87,7 @@ func CreateJoinLobbyMenu(winConf *Window.WindowConfig, currState *States.States,
 				userConfig.HeroPicture,
 			),
 			userConfig.Conn,
+			1,
 		)
 		server.Write()
 		response := server.Read()

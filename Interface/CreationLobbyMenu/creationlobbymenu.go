@@ -77,7 +77,7 @@ func CreateLobbyMakingMenu(winConf *Window.WindowConfig, currState *States.State
 
 		writtenID := strings.Join(winConf.TextAreas.CreateLobbyInput.WrittenText, "")
 		userConfig.LobbyID = writtenID
-		server.Init(fmt.Sprintf("CreateLobby///%s", writtenID), userConfig.Conn)
+		server.Init(fmt.Sprintf("CreateLobby///%s", writtenID), userConfig.Conn, 1)
 		server.Write()
 		server.Read()
 
@@ -93,6 +93,7 @@ func CreateLobbyMakingMenu(winConf *Window.WindowConfig, currState *States.State
 				userConfig.HeroPicture,
 			), 
 			userConfig.Conn,
+			1,
 		)
 		server.Write()
 		response := server.Read()
