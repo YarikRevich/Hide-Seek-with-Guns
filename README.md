@@ -30,6 +30,7 @@ Download important dependences
 ```
 go get github.com/galsondor/go-ascii
 go get github.com/go-ping/ping
+go get github.com/faiface/beep
 ```
 
 Then compile project due to the command beneath

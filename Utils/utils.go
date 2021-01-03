@@ -120,9 +120,9 @@ func CheckErrorResp(resp string)bool{
 func GetRandomSpawn()pixel.Vec{
 	spawnPlaces := []pixel.Vec{
 		pixel.V(-166, -182),
-		//pixel.V(1174, 748),
-		//pixel.V(1124, -182),
-		//pixel.V(-231, 768),
+		pixel.V(1174, 748),
+		pixel.V(1124, -182),
+		pixel.V(-231, 768),
 	}
 	return spawnPlaces[GetRandNum(len(spawnPlaces))]
 }

@@ -30,12 +30,14 @@ func ListenForChanges(winConf *Window.WindowConfig, userConfig *Users.User, curr
 			if (winConf.Win.MousePosition().X >= 361 && winConf.Win.MousePosition().X <= 596) && (winConf.Win.MousePosition().Y >= 73 && winConf.Win.MousePosition().Y <= 165) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
 				server.Init(fmt.Sprintf("ClosePreparingLobby///%s~", userConfig.LobbyID), userConfig.Conn)
 				server.Write()
+				server.Read()
 				currState.SetGame()
 			}
 			if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 463 && winConf.Win.MousePosition().Y <= 507) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
 				currState.SetCreateLobbyMenu()
 				server.Init(fmt.Sprintf("DeleteLobby///%s", userConfig.LobbyID), userConfig.Conn)
 				server.Write()
+				server.Read()
 			}
 		case "join":
 			if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 463 && winConf.Win.MousePosition().Y <= 507) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
