@@ -1,12 +1,12 @@
 package Animation
 
 import (
-	"Game/Window"
 	"fmt"
-	"github.com/faiface/pixel/pixelgl"
-	"github.com/faiface/pixel"
-	"Game/Heroes/Users"
 	"strconv"
+	"Game/Window"
+	"Game/Heroes/Users"
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 )
 
 func getFrame(frameWidth float64, frameHeight float64, xGrid float64, yGrid int) pixel.Rect{

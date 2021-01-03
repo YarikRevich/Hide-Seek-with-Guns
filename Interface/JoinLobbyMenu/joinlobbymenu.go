@@ -3,6 +3,8 @@ package JoinLobbyMenu
 import (
 	"strings"
 	"Game/Window"
+	"Game/Server"
+	"Game/Components/States"
 	"Game/Heroes/Users"
 	"Game/Utils"
 	"fmt"
@@ -33,7 +35,7 @@ func ChangeLobbyIDInputArea(winConf *Window.WindowConfig){
 	winConf.WindowUpdation.JoinLobbyMenuFrame++
 }
 
-func CheckBackButton(winConf *Window.WindowConfig, currState *Users.States){
+func CheckBackButton(winConf *Window.WindowConfig, currState *States.States){
 	if winConf.WindowUpdation.JoinLobbyMenuFrame % 8 == 0 && winConf.WindowUpdation.JoinLobbyMenuFrame != 0{
 		if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 468 && winConf.Win.MousePosition().Y <= 511) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
 			winConf.TextAreas.JoinLobbyInput.WrittenText = []string{}
@@ -42,36 +44,14 @@ func CheckBackButton(winConf *Window.WindowConfig, currState *Users.States){
 	}
 }
 
-func CheckJoinButton(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User)error{
+func CheckJoinButton(winConf *Window.WindowConfig, currState *States.States, userConfig *Users.User)error{
 	if (winConf.Win.MousePosition().X >= 363 && winConf.Win.MousePosition().X <= 596) && (winConf.Win.MousePosition().Y >= 73 && winConf.Win.MousePosition().Y <= 165) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
 		winConf.Senders.JoinRoom = true
 	}
 	return nil
 }
 
-func SendWriteRequst(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
-	lobbyIdToJoin := strings.Join(winConf.TextAreas.JoinLobbyInput.WrittenText, "")
-	userConfig.LobbyID = lobbyIdToJoin 
-	requestToAdd := fmt.Sprintf(
-		"AddToLobby///%s~/%s/%d/%d/%d/%d/0|0|0|0/%s", 
-		lobbyIdToJoin,
-		userConfig.Username,
-		userConfig.X,
-		userConfig.Y,
-		userConfig.UpdationRun,
-		userConfig.CurrentFrame,
-		userConfig.HeroPicture,
-	)
-	userConfig.Conn.Write([]byte(requestToAdd))
-}
-
-func SendReadRequest(winConf *Window.WindowConfig, userConfig *Users.User, currState *Users.States)[]byte{
-	buff := make([]byte, 4096)
-	userConfig.Conn.Read(buff)	
-	return buff
-}
-
-func CreateJoinLobbyMenu(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
+func CreateJoinLobbyMenu(winConf *Window.WindowConfig, currState *States.States, userConfig *Users.User){
 	winConf.DrawJoinLobbyMenuBG()
 
 	winConf.DrawErrorText()
@@ -91,8 +71,25 @@ func CreateJoinLobbyMenu(winConf *Window.WindowConfig, currState *Users.States, 
 	CheckJoinButton(winConf, currState, userConfig)
 
 	if winConf.Senders.JoinRoom{
-		SendWriteRequst(winConf, currState, userConfig)
-		response := SendReadRequest(winConf, userConfig, currState)
+		
+		server := Server.Network(new(Server.N))
+		lobbyIdToJoin := strings.Join(winConf.TextAreas.JoinLobbyInput.WrittenText, "")
+		userConfig.LobbyID = lobbyIdToJoin 
+		server.Init(
+			fmt.Sprintf(
+				"AddToLobby///%s~/%s/%d/%d/%d/%d/0|0|0|0/%s", 
+				lobbyIdToJoin,
+				userConfig.Username,
+				userConfig.X,
+				userConfig.Y,
+				userConfig.UpdationRun,
+				userConfig.CurrentFrame,
+				userConfig.HeroPicture,
+			),
+			userConfig.Conn,
+		)
+		server.Write()
+		response := server.Read()
 		if !Utils.MessageIsEmpty(response){
 			if Utils.CheckErrorResp(string(response)){
 				winConf.WindowError.LobbyDoesNotExist = true

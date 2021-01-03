@@ -1,8 +1,6 @@
 package Window
 
 import (
-	"Game/Heroes/Users"
-	"Game/Interface/GameProcess/Map"
 	"Game/Utils"
 	"time"
 
@@ -23,6 +21,8 @@ type MenuImages struct{
 	Game *pixel.Sprite
 	HorDoor *pixel.Sprite
 	VerDoor *pixel.Sprite
+	Darkness *pixel.Sprite
+	GoldChest *pixel.Sprite
 }
 
 type TextAreas struct{
@@ -61,6 +61,7 @@ type WaitRoom struct{
 
 type Components struct{
 	AvailableHeroImages map[string]*pixel.Sprite
+	AvPlacesForSpaws []pixel.Vec
 }
 
 type Cam struct{
@@ -106,78 +107,6 @@ func CreateWindow()WindowConfig{
 	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: &textArea, WindowUpdation: new(WindowUpdation), WindowError: new(WindowError), Components: new(Components), WaitRoom: new(WaitRoom), Cam: new(Cam), Senders: new(Senders)}
 }
 
-func collibrateBottom(borders Map.CamBorder, userConfig Users.User)float64{
-	bottom := borders.Bottom()
-	Y := userConfig.Y
-	for{
-		if float64(Y) >= bottom{
-			return float64(Y)
-		}
-		Y++
-	}
-}
-
-func collibrateTop(borders Map.CamBorder, userConfig Users.User)float64{
-	top := borders.Top()
-	Y := userConfig.Y
-	for{
-		if float64(Y) <= top{
-			return float64(Y)
-		}
-		Y--
-	}
-}
-
-func collibrateLeft(borders Map.CamBorder, userConfig Users.User)float64{
-	left := borders.Left()
-	X := userConfig.X
-	for{
-		if float64(X) >= left{
-			return float64(X)
-		}  
-		X++
-	}
-} 
-
-func collibrateRight(borders Map.CamBorder, userConfig Users.User)float64{
-	right := borders.Right()
-	X := userConfig.X
-	for{
-		if float64(X) <= right{
-			return float64(X)
-		}
-		X--
-	}
-}
-
-func collibrate(borders Map.CamBorder, userConfig Users.User)pixel.Vec{
-	var X float64
-	var Y float64
-	Y = collibrateBottom(borders, userConfig)
-	NewY := collibrateTop(borders, userConfig)
-	if NewY != float64(userConfig.Y){
-		Y = NewY
-	}
-	X = collibrateLeft(borders, userConfig)
-	NewX := collibrateRight(borders, userConfig)
-	if NewX != float64(userConfig.X){
-		X = NewX
-	}
-	return pixel.V(X, Y)
-
-}
-
-func (winConf *WindowConfig)SetCam(userConfig Users.User, borders Map.CamBorder){
-	coords := collibrate(borders, userConfig)
-	winConf.Cam.CamPos = pixel.V(coords.X, coords.Y)
-	winConf.Cam.CamZoom = 1.0
-}
-
-func (winConf *WindowConfig)UpdateCam(){
-	Cam := pixel.IM.Scaled(winConf.Cam.CamPos, winConf.Cam.CamZoom).Moved(winConf.Win.Bounds().Center().Sub(winConf.Cam.CamPos))
-	winConf.Win.SetMatrix(Cam)
-}
-
 func (winConf *WindowConfig)UpdateBackground(){
 	winConf.Win.Clear(colornames.Black)
 	winConf.BGImages.StartMenuBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
@@ -198,7 +127,7 @@ func (winConf *WindowConfig)DrawErrorText(){
 	}
 }
 
-func (winConf *WindowConfig)DrawAllTextAreas(){
+func (winConf *WindowConfig)LoadAllTextAreas(){
 	atlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
 	winConf.TextAreas.WriteIDTextArea = text.New(pixel.V(220, 460), atlas)
 	winConf.TextAreas.CreateLobbyInput.InputLobbyIDTextArea = text.New(pixel.V(285, 332), atlas)
@@ -334,4 +263,48 @@ func (winConf WindowConfig)DrawVerDoor(coords pixel.Vec){
 	//Draws vertical doors at passed coords
 
 	winConf.BGImages.VerDoor.Draw(winConf.Win, pixel.IM.Moved(coords))
+}
+
+func (winConf *WindowConfig)LoadDarkness(){
+	image, err := Utils.LoadImage("SysImages/darkness.png")
+	if err != nil{
+		panic(err)
+	}
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.Darkness = sprite
+}
+
+func (winConf WindowConfig)DrawDarkness(coords pixel.Vec){
+	//Draws darkness on the background.
+
+	winConf.BGImages.Darkness.Draw(winConf.Win, pixel.IM.Scaled(coords, 1.6).Moved(coords))
+}
+
+func (winConf *WindowConfig)LoadGoldChest(){
+	image, err := Utils.LoadImage("SysImages/goldchest.png")
+	if err != nil{
+		panic(err)
+	}
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.GoldChest = sprite
+}
+
+func (winConf WindowConfig)DrawGoldChest(){
+	for _, value := range winConf.Components.AvPlacesForSpaws{
+		winConf.BGImages.GoldChest.Draw(winConf.Win, pixel.IM.Moved(value))
+	}
+}
+
+func (winConf WindowConfig)LoadAllImageComponents(){
+	//It loads all the images for working.
+
+	winConf.LoadCreationLobbyMenuBG()
+	winConf.LoadJoinLobbyMenu()
+	winConf.LoadWaitRoomMenuBG()
+	winConf.LoadWaitRoomJoinBG()
+	winConf.LoadGameBackground()
+	winConf.LoadHorDoor()
+	winConf.LoadVerDoor()
+	winConf.LoadDarkness()
+	winConf.LoadGoldChest()
 }

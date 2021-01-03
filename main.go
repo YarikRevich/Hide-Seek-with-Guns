@@ -1,27 +1,24 @@
 package main
 
 import (
+	"fmt"
+	"time"
+	"Game/Utils"
+	"Game/Window"
+	"Game/Server"
+	"Game/Utils/Log"
 	"Game/Heroes/Users"
-	"Game/Interface/CreationLobbyMenu"
+	"Game/Interface/Menu"
+	"Game/Components/Map"
+	"Game/Components/Start"
+	"Game/Components/States"
 	"Game/Interface/GameProcess"
-	"Game/Interface/GameProcess/Map"
 	"Game/Interface/JoinLobbyMenu"
 	"Game/Interface/LobbyWaitRoom"
-	"Game/Interface/Menu"
-	"Game/Server"
-	"Game/Utils"
-	"Game/Utils/Log"
-	"Game/Window"
-	"fmt"
-	"net"
-	"os"
-	"strconv"
-	"strings"
-	"time"
-	"errors"
+	"Game/Interface/CreationLobbyMenu"
 
-	"github.com/faiface/pixel/pixelgl"
 	"github.com/gookit/color"
+	"github.com/faiface/pixel/pixelgl"
 )
 
 var (
@@ -29,108 +26,7 @@ var (
 	second = time.Tick(time.Second)
 )
 
-func getMainServer()string{
-	file, err := os.OpenFile("config.txt", os.O_CREATE|os.O_RDONLY, 0755)
-	if err != nil{
-		panic(err)
-	}
-	buff := make([]byte, 4096)
-	file.Read(buff)
-	var cleanedBuff []byte
-	for _, value := range buff{
-		if value == 0{
-			continue
-		}
-		cleanedBuff = append(cleanedBuff, value)
-	}
-	if len(cleanedBuff) == 0{
-		fmt.Println("Config file is empty! Please write your own main server adress or copy it from the repo!")
-		os.Exit(0)
-	}
-	return string(cleanedBuff)
-}
-
-func connectToMainServer(adress string)*net.UDPConn{
-	splittedAdress := strings.Split(strings.Replace(adress, "\n", "", 1), ":")
-	ip, portStr := splittedAdress[0], splittedAdress[1]
-	port, err := strconv.Atoi(portStr)
-	if err != nil{
-		panic(err)
-	}
-	udpaddr := net.UDPAddr{
-		Port: port,
-		IP: net.ParseIP(ip),
-	}
-	conn, err := net.DialUDP("udp", nil, &udpaddr)
-	conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
-	conn.SetWriteDeadline(time.Now().Add(1000 * time.Millisecond))
-	if err != nil{
-		panic(err)
-	}
-	return conn
-}
-
-func getAvailableServers(conn *net.UDPConn)map[int]string{
-	conn.Write([]byte("CheckServers"))
-	buff := make([]byte, 4096)
-	conn.Read(buff)
-	var cleanedBuff []byte
-	for _, value := range buff{
-		if value == 0{
-			continue
-		}
-		cleanedBuff = append(cleanedBuff, value)
-	}
-	result := map[int]string{}
-	for index, value := range strings.SplitAfter(string(cleanedBuff), " "){
-		result[index+1] = value
-	}
-	return result
-}
-
-func formatAvailableServersList(availableservers map[int]string)error{
-	value, _ := availableservers[1]
-	if len(availableservers) == 1 && len(value) == 0{
-		color.Red.Println("There are no available servers right now!")
-		return errors.New("there are no available server")
-	}
-	for index, value := range availableservers{
-		ip := strings.Split(value, ":")[0]
-		pink := color.Magenta.Darken().Render
-		fmt.Printf("%s %s: %d)\n", pink("=>"), ip, index)
-	}
-	return nil
-}
-
-func choseCoresspondingServer(listServers map[int]string)string{
-	for{
-		color.Yellow.Print("Write the number of server: ")
-		var server int
-		fmt.Scan(&server)
-		value, ok := listServers[server]
-		if ok{
-			return value
-		}
-		color.Red.Println("Such one is not available!")
-	}
-}
-
-func getStartInfo()(string, string){
-	color.Green.Println("Chose the server to play on!")
-	listServers := getAvailableServers(connectToMainServer(getMainServer()))
-	err := formatAvailableServersList(listServers)
-	var server string
-	if err == nil{
-		server = choseCoresspondingServer(listServers)
-		fmt.Printf("Chosen server is %s\n", strings.Split(server, ":")[0])
-	}
-	color.Green.Println("Write your username!")
-	var username string
-	fmt.Scan(&username)
-	return username, server
-}
-
-func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User, camBorder Map.CamBorder){
+func choseActionGate(winConf *Window.WindowConfig, currState *States.States, userConfig *Users.User, mapComponents Map.MapConf){
 	/* It is a main action gate which choses an
 	   important menu to act and to draw. It can
 	   chose such menues as:
@@ -140,6 +36,7 @@ func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, user
 	   - WaitRoom
 	   - Game
 	*/
+
 	switch{
 	case currState.StartMenu:
 		Menu.ListenForActions(*winConf, currState)
@@ -150,7 +47,7 @@ func choseActionGate(winConf *Window.WindowConfig, currState *Users.States, user
 	case currState.WaitRoom:
 		LobbyWaitRoom.CreateLobbyWaitRoom(winConf, currState, userConfig)
 	case currState.Game:
-		GameProcess.CreateGame(userConfig, winConf, camBorder)
+		GameProcess.CreateGame(userConfig, winConf, currState, mapComponents)
 	}
 }
 
@@ -165,23 +62,25 @@ func run(){
 	   to draw.
 	*/
 
-	username, server := getStartInfo()
-
-	winConf := Window.CreateWindow()
-	winConf.DrawBackgroundImage()
-	winConf.LoadCreationLobbyMenuBG()
-	winConf.LoadJoinLobbyMenu()
-	winConf.LoadWaitRoomMenuBG()
-	winConf.LoadWaitRoomJoinBG()
-	winConf.LoadGameBackground()
-	winConf.LoadHorDoor()
-	winConf.LoadVerDoor()
-	winConf.DrawAllTextAreas()
-	winConf.LoadAvailableHeroImages()
+	//Gets info from user to place his name and server's name
+	username, server := Start.GetStartInfo()
 	conn := Server.GetConnection(server)
 
+	//Create window and place all the components
+	winConf := Window.CreateWindow()
+
+	//Loads all the components
+	winConf.LoadAllImageComponents()
+	winConf.LoadAllTextAreas()
+	winConf.LoadAvailableHeroImages()
+
+	//Draws background image to start game
+	winConf.DrawBackgroundImage()
+
+	//Get user's spawn place
 	randomSpawn := Utils.GetRandomSpawn()
 
+	//Configures user's info
 	userConfig := Users.User{
 		Username: username,
 		Conn: conn,
@@ -192,16 +91,23 @@ func run(){
 		CurrentFrameMatrix: []string{"0", "0", "0", "0"},
 	}
 
-	CurrState := Users.States{StartMenu: true}
+	//Sets current state at 'StartMenu'
+	currState := States.States{StartMenu: true, ComponentsStates: new(States.ComponentsStates)}
 
-	camBorder := Map.CamBorder(&Map.CB{})
-	camBorder.Init(winConf.BGImages.Game)
+	//Configures map
+	mapComponents := Map.MapConf(new(Map.MapC))
+	mapComponents.Init()
+	mapComponents.ConfAll(&winConf, userConfig)
 
-	winConf.SetCam(userConfig, camBorder)
+	winConf.Components.AvPlacesForSpaws = mapComponents.GetAnailizer().AnalizeAvailablePlaces()
 
-	log := Log.Logger(&Log.Log{})
+	//Initiates logger
+	log := Log.Logger(new(Log.Log))
 	log.Init(&userConfig)
+
+	//Starts pinger
 	go log.GetPing()
+
 	for !winConf.Win.Closed(){
 
 		//Shows statistics about user if argument is placed
@@ -210,11 +116,16 @@ func run(){
 		frames++
 		select{
 		case <- second:
+			//Sets title of the window with frame rate
 			winConf.Win.SetTitle(fmt.Sprintf("Hide and seek| %d", frames))
 			frames = 0
 		default:
+			//Upgrades background
 			winConf.UpdateBackground()
-			choseActionGate(&winConf, &CurrState, &userConfig, camBorder)
+
+			//Goes to the action gate to chose an important one
+			choseActionGate(&winConf, &currState, &userConfig, mapComponents)
+			
 			winConf.Win.Update()
 		}
 	}

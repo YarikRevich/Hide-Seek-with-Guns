@@ -1,79 +1,82 @@
 package GameProcess
 
 import (
-	"Game/Heroes/Animation"
-	"Game/Heroes/Users"
-	"Game/Interface/GameProcess/ConfigParsers"
-	"Game/Interface/GameProcess/Map"
+	"fmt"
+	_ "time"
+	"strings"
 	"Game/Utils"
 	"Game/Window"
-	"fmt"
-	"strings"
-	"time"
+	"Game/Server"
+	"Game/Heroes/Users"
+	"Game/Heroes/Animation"
+	"Game/Components/Sound"
+	"Game/Components/States"
+	Map "Game/Components/Map"
+	"Game/Interface/GameProcess/ConfigParsers"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 )
 
-func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig, camBorder Map.CamBorder){
+func KeyBoardButtonListener(userConfig *Users.User, winConf *Window.WindowConfig, mapComponents Map.MapConf){
 
-	heroBorder := Map.HeroBorder(&Map.HB{})
+	currPosition := pixel.V(float64(userConfig.X), float64(userConfig.Y))
+	vector, _, ok := mapComponents.GetCollisions().IsDoor(currPosition)
 
-	CMap := new(Map.C)
-	collisions := Map.Collisions(CMap)
-	collisions.Init()
-
-	vector, _, ok := collisions.IsDoor(pixel.V(float64(userConfig.X), float64(userConfig.Y)))
 	if ok{
-		collisions.DeleteDoor(vector)
+		mapComponents.GetCollisions().DeleteDoor(vector)
 	}
-	collisions.DrawDoors(winConf.DrawHorDoor, winConf.DrawVerDoor)
+	if !mapComponents.GetCollisions().IsNearDeletedDoor(currPosition){
+	 	mapComponents.GetCollisions().RecreateDeletedDoors()
+	}
+
+	mapComponents.GetCollisions().DrawDoors(winConf.DrawHorDoor, winConf.DrawVerDoor)
 	
 	switch {
 	case winConf.Win.Pressed(pixelgl.KeyW):
-		if collisions.IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y+2))){
+		if mapComponents.GetCollisions().IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y+2))){
 			return
 		}
-		if userConfig.Y <= heroBorder.Top(){
+		if userConfig.Y <= mapComponents.GetHeroBorder().Top(){
 			userConfig.Y += 3
 		}
-		if winConf.Cam.CamPos.Y < camBorder.Top(){
+		if winConf.Cam.CamPos.Y < mapComponents.GetCamBorder().Top(){
 			if userConfig.Y >= int(winConf.Win.Bounds().Center().Y){
 				winConf.Cam.CamPos.Y += 5
 			}
 		}
 	case winConf.Win.Pressed(pixelgl.KeyA):
-		if collisions.IsCollision(pixel.V(float64(userConfig.X-2), float64(userConfig.Y))){
+		if mapComponents.GetCollisions().IsCollision(pixel.V(float64(userConfig.X-2), float64(userConfig.Y))){
 			return
 		}
-		if userConfig.X >= heroBorder.Left(){
+		if userConfig.X >= mapComponents.GetHeroBorder().Left(){
 			userConfig.X -= 3
 		}
-		if winConf.Cam.CamPos.X >= camBorder.Left(){
+		if winConf.Cam.CamPos.X >= mapComponents.GetCamBorder().Left(){
 			if userConfig.X <= int(winConf.Win.Bounds().Center().X){
 				winConf.Cam.CamPos.X -= 5
 			}
 		}
 	case winConf.Win.Pressed(pixelgl.KeyS):
-		if collisions.IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y-2))){
+		if mapComponents.GetCollisions().IsCollision(pixel.V(float64(userConfig.X), float64(userConfig.Y-2))){
 			return
 		}
-		if userConfig.Y >= heroBorder.Bottom(){
+		if userConfig.Y >= mapComponents.GetHeroBorder().Bottom(){
 			userConfig.Y -= 3
 		}
-		if winConf.Cam.CamPos.Y >= camBorder.Bottom(){
+		if winConf.Cam.CamPos.Y >= mapComponents.GetCamBorder().Bottom(){
 			if userConfig.Y <= int(winConf.Win.Bounds().Center().Y){	
 				winConf.Cam.CamPos.Y -= 5
 			}
 		}
 	case winConf.Win.Pressed(pixelgl.KeyD):
-		if collisions.IsCollision(pixel.V(float64(userConfig.X+2), float64(userConfig.Y))){
+		if mapComponents.GetCollisions().IsCollision(pixel.V(float64(userConfig.X+2), float64(userConfig.Y))){
 			return
 		}
-		if userConfig.X <= heroBorder.Right(){
+		if userConfig.X <= mapComponents.GetHeroBorder().Right(){
 			userConfig.X += 3
 		}
-		if winConf.Cam.CamPos.X <= camBorder.Right(){
+		if winConf.Cam.CamPos.X <= mapComponents.GetCamBorder().Right(){
 			if userConfig.X >= int(winConf.Win.Bounds().Center().X){	
 				winConf.Cam.CamPos.X += 5
 			}
@@ -87,36 +90,33 @@ func ReDraw(otherUsers *[]*Users.User, winConf *Window.WindowConfig){
 	}
 }
 
-func ChangePos(userConfig *Users.User, winConf *Window.WindowConfig, camBorder Map.CamBorder){
-	KeyBoardButtonListener(userConfig, winConf, camBorder)
+func ChangePos(userConfig *Users.User, winConf *Window.WindowConfig, mapComponents Map.MapConf){
+	KeyBoardButtonListener(userConfig, winConf, mapComponents)
 	Animation.MoveAndChangeAnim(userConfig, winConf)
 }
 
-func ListenToUsersInfo(userConfig *Users.User)string{
-	
-	buff := make([]byte, 4096)
-	userConfig.Conn.SetReadDeadline(time.Now().Add(50 * time.Millisecond))
-	userConfig.Conn.Read(buff)
-	return string(buff)
-}
+func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig, states *States.States, mapComponents Map.MapConf){
 
-func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig, camBorder Map.CamBorder){
+	server := Server.Network(new(Server.N))
+	server.Init(fmt.Sprintf("GetUsersInfo///%s~", userConfig.LobbyID), userConfig.Conn)
+	server.Write()
+	response := server.Read()
 
-	formattedReq := fmt.Sprintf("GetUsersInfo///%s~", userConfig.LobbyID)
-	userConfig.Conn.Write([]byte(formattedReq))
-	response := ListenToUsersInfo(userConfig)
-	winConf.DrawGameBackground()
-
+	sound := Sound.Sound(new(Sound.S))
+	sound.Init(states)
+	sound.Play()
 
 	//Draws main hero
-	ChangePos(userConfig, winConf, camBorder)
 	
-	parsedMessage := ConfigParsers.ParseConfig(userConfig)
-	userConfig.Conn.SetWriteDeadline(time.Now().Add(50 * time.Millisecond))
-	userConfig.Conn.Write([]byte(parsedMessage))
+	winConf.DrawGameBackground()
+	ChangePos(userConfig, winConf, mapComponents)
+	//winConf.DrawGoldChest() : It is testing now :)
 
-	if ConfigParsers.IsUsersInfo(response){
-		if cleaned := Utils.CleanGottenResponse(strings.Split(response, "~/")[1]); len(cleaned) != 0{
+	server.Init(ConfigParsers.ParseConfig(userConfig), userConfig.Conn)
+	server.Write()
+
+	if ConfigParsers.IsUsersInfo(string(response)){
+		if cleaned := Utils.CleanGottenResponse(strings.Split(string(response), "~/")[1]); len(cleaned) != 0{
 			
 			//Draws other heroes
 			otherUsers := []*Users.User{}
@@ -124,5 +124,6 @@ func CreateGame(userConfig *Users.User, winConf *Window.WindowConfig, camBorder 
 			ReDraw(&otherUsers, winConf)
 		}
 	}
-	winConf.UpdateCam()
+	winConf.DrawDarkness(pixel.V((float64(userConfig.X)*2.5)-31, (float64(userConfig.Y)*2.5)-30))
+	mapComponents.GetCam().UpdateCam()
 }

@@ -41,7 +41,7 @@ func (l *Log)GetPing(){
 
 func (l Log)Show(){
 	if len(os.Args) >= 2 && os.Args[1] == "stat"{
-		log.Printf("\n-------------\nX: [%d], Y: [%d]\nHeroImage: [%s]\nLobbyID: [%s]\nServer: [%s]\nDelay: [%s]\nPackets: [PacketsLoss: %f, PacketsSent: %d, PacketsRecv: %d] -------------", 
+		log.Printf("\n-------------\nX: [%d], Y: [%d]\nHeroImage: [%s]\nLobbyID: [%s]\nServer: [%s]\nDelay: [%s]\nPackets: [PacketsLoss: %f, PacketsSent: %d, PacketsRecv: %d]\n-------------", 
 			l.userConfig.X, l.userConfig.Y, l.userConfig.HeroPicture, l.userConfig.LobbyID, strings.Split(l.userConfig.Conn.RemoteAddr().String(), ":")[0], l.stat.AvgRtt, l.stat.PacketLoss, l.stat.PacketsSent, l.stat.PacketsRecv,
 		)
 	}

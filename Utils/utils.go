@@ -8,6 +8,7 @@ import (
 	"image"
 	"os"
 	"os/exec"
+	"reflect"
 	"strings"
 	"github.com/faiface/pixel"
 	_ "image/png"
@@ -119,10 +120,20 @@ func CheckErrorResp(resp string)bool{
 func GetRandomSpawn()pixel.Vec{
 	spawnPlaces := []pixel.Vec{
 		pixel.V(-166, -182),
-		pixel.V(1174, 748),
-		pixel.V(1124, -182),
-		pixel.V(-231, 768),
+		//pixel.V(1174, 748),
+		//pixel.V(1124, -182),
+		//pixel.V(-231, 768),
 	}
 	return spawnPlaces[GetRandNum(len(spawnPlaces))]
+}
+
+func GetValueFromInterface(value string, inter interface{})interface{}{
+	refl := reflect.ValueOf(inter)
+	for i:=0; i<= refl.NumField(); i++{
+		if refl.Type().Field(i).Name == value{
+			return refl.Elem().Field(i)
+		}
+	}
+	return inter
 }
 

@@ -1,14 +1,16 @@
 package LobbyWaitRoom
 
 import (
+	"fmt"
 	"strings"
-	"github.com/faiface/pixel/pixelgl"
-	"github.com/faiface/pixel"
+	"Game/Utils"
+	"Game/Server"
 	"Game/Window"
 	"Game/Heroes/Users"
-	"Game/Utils"
+	"Game/Components/States"
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 	"Game/Interface/GameProcess/ConfigParsers"
-	"fmt"
 )
 
 func ClientIsWritten(client string, winConf *Window.WindowConfig)bool{
@@ -20,14 +22,20 @@ func ClientIsWritten(client string, winConf *Window.WindowConfig)bool{
 	return false
 }
 
-func ListenForChanges(winConf *Window.WindowConfig, userConfig *Users.User, currState *Users.States){
+func ListenForChanges(winConf *Window.WindowConfig, userConfig *Users.User, currState *States.States){
 	if winConf.WindowUpdation.WaitRoomFrame % 8 == 0 && winConf.WindowUpdation.WaitRoomFrame != 0{
+		server := Server.Network(new(Server.N))
 		switch winConf.WaitRoom.RoomType {
 		case "create":
 			if (winConf.Win.MousePosition().X >= 361 && winConf.Win.MousePosition().X <= 596) && (winConf.Win.MousePosition().Y >= 73 && winConf.Win.MousePosition().Y <= 165) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-				formattedReq := fmt.Sprintf("ClosePreparingLobby///%s~", userConfig.LobbyID)
-				userConfig.Conn.Write([]byte(formattedReq))
+				server.Init(fmt.Sprintf("ClosePreparingLobby///%s~", userConfig.LobbyID), userConfig.Conn)
+				server.Write()
 				currState.SetGame()
+			}
+			if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 463 && winConf.Win.MousePosition().Y <= 507) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+				currState.SetCreateLobbyMenu()
+				server.Init(fmt.Sprintf("DeleteLobby///%s", userConfig.LobbyID), userConfig.Conn)
+				server.Write()
 			}
 		case "join":
 			if (winConf.Win.MousePosition().X >= 21 && winConf.Win.MousePosition().X <= 68) && (winConf.Win.MousePosition().Y >= 463 && winConf.Win.MousePosition().Y <= 507) && winConf.Win.Pressed(pixelgl.MouseButtonLeft){
@@ -38,18 +46,7 @@ func ListenForChanges(winConf *Window.WindowConfig, userConfig *Users.User, curr
 	winConf.WindowUpdation.WaitRoomFrame++	
 }
 
-func SendWriteRequest(winConf *Window.WindowConfig, userConfig *Users.User, currState *Users.States){
-	requestText := fmt.Sprintf("GetUsersInfoLobby///%s", userConfig.LobbyID)
-	userConfig.Conn.Write([]byte(requestText))
-}
-
-func SendReadRequest(winConf *Window.WindowConfig, userConfig *Users.User, currState *Users.States)[]byte{
-	buff := make([]byte, 4096)
-	userConfig.Conn.Read(buff)
-	return buff
-}
-
-func CreateLobbyWaitRoom(winConf *Window.WindowConfig, currState *Users.States, userConfig *Users.User){
+func CreateLobbyWaitRoom(winConf *Window.WindowConfig, currState *States.States, userConfig *Users.User){
 
 	switch winConf.WaitRoom.RoomType{
 	case "create":
@@ -76,8 +73,11 @@ func CreateLobbyWaitRoom(winConf *Window.WindowConfig, currState *Users.States, 
 
 	ListenForChanges(winConf, userConfig, currState)
 
-	SendWriteRequest(winConf, userConfig, currState)
-	response := SendReadRequest(winConf, userConfig, currState)
+	server := Server.Network(new(Server.N))
+	server.Init(fmt.Sprintf("GetUsersInfoLobby///%s", userConfig.LobbyID), userConfig.Conn)
+	server.Write()
+	response := server.Read()
+
 	if !Utils.MessageIsEmpty(response){
 		if Utils.CheckErrorResp(string(response)){
 			currState.SetGame()
