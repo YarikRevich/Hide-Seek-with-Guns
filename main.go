@@ -1,24 +1,25 @@
 package main
 
 import (
-	"fmt"
-	"time"
-	"Game/Utils"
-	"Game/Window"
-	"Game/Server"
-	"Game/Utils/Log"
-	"Game/Heroes/Users"
-	"Game/Interface/Menu"
 	"Game/Components/Map"
 	"Game/Components/Start"
 	"Game/Components/States"
-	"Game/Interface/GameProcess"
-	"Game/Interface/JoinLobbyMenu"
-	"Game/Interface/LobbyWaitRoom"
-	"Game/Interface/CreationLobbyMenu"
+	"Game/Heroes/Users"
+	"Game/Server"
+	"Game/UI"
+	"Game/UI/CreationLobbyMenu"
+	"Game/UI/GameProcess"
+	"Game/UI/JoinLobbyMenu"
+	"Game/UI/LobbyWaitRoom"
+	"Game/UI/StartMenu"
+	"Game/Utils"
+	"Game/Utils/Log"
+	"Game/Window"
+	"fmt"
+	"time"
 
-	"github.com/gookit/color"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/gookit/color"
 )
 
 var (
@@ -38,16 +39,26 @@ func choseActionGate(winConf *Window.WindowConfig, currState *States.States, use
 	*/
 
 	switch{
-	case currState.StartMenu:
-		Menu.ListenForActions(*winConf, currState)
-	case currState.CreateLobbyMenu:
-		CreationLobbyMenu.CreateLobbyMakingMenu(winConf, currState, userConfig)
-	case currState.JoinLobbyMenu:
-		JoinLobbyMenu.CreateJoinLobbyMenu(winConf, currState, userConfig)
-	case currState.WaitRoom:
-		LobbyWaitRoom.CreateLobbyWaitRoom(winConf, currState, userConfig)
-	case currState.Game:
-		GameProcess.CreateGame(userConfig, winConf, currState, mapComponents)
+	case currState.MainStates.StartMenu:
+		stage := UI.Stage(new(StartMenu.StartMenu))
+		stage.Init(winConf, currState, userConfig, mapComponents)
+		stage.Run()
+	case currState.MainStates.CreateLobbyMenu:
+		stage := UI.Stage(new(CreationLobbyMenu.CreationLobbyMenu))
+		stage.Init(winConf, currState, userConfig, mapComponents)
+		stage.Run()
+	case currState.MainStates.JoinLobbyMenu:
+		stage := UI.Stage(new(JoinLobbyMenu.JoinLobbyMenu))
+		stage.Init(winConf, currState, userConfig, mapComponents)
+		stage.Run()
+	case currState.MainStates.WaitRoom:
+		stage := UI.Stage(new(LobbyWaitRoom.LobbyWaitRoom))
+		stage.Init(winConf, currState, userConfig, mapComponents)
+		stage.Run()
+	case currState.MainStates.Game:
+		stage := UI.Stage(new(GameProcess.GameProcess))
+		stage.Init(winConf, currState, userConfig, mapComponents)
+		stage.Run()
 	}
 }
 
@@ -82,17 +93,23 @@ func run(){
 
 	//Configures user's info
 	userConfig := Users.User{
-		Username: username,
-		Conn: conn,
-		X: int(randomSpawn.X),
-		Y: int(randomSpawn.Y),
-		Game: &Users.Game{ReadWriteUpdate: make(chan string)},
-		HeroPicture: Utils.GetRandomHeroImage(winConf.Components.AvailableHeroImages),
+		Username:           username,
+		Conn:               conn,
+		X:                  int(randomSpawn.X),
+		Y:                  int(randomSpawn.Y),
+		Game:               &Users.Game{ReadWriteUpdate: make(chan string)},
+		HeroPicture:        Utils.GetRandomHeroImage(winConf.Components.AvailableHeroImages),
 		CurrentFrameMatrix: []string{"0", "0", "0", "0"},
 	}
 
 	//Sets current state at 'StartMenu'
-	currState := States.States{StartMenu: true, ComponentsStates: new(States.ComponentsStates)}
+	currState := States.States{
+		MainStates:       new(States.MainStates),
+		MusicStates:      new(States.MusicStates),
+		SendStates:       new(States.SendStates), 
+		NetworkingStates: new(States.NetworkingStates),
+	}
+	currState.MainStates.SetStartMenu()
 
 	//Configures map
 	mapComponents := Map.MapConf(new(Map.MapC))

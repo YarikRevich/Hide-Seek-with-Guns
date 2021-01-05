@@ -31,8 +31,8 @@ func (s *S) Init(states *States.States){
 func (s *S) Play(){
 	//Plays places soundtrack
 
-	if !s.states.ComponentsStates.PlayGameSound{
-		s.states.ComponentsStates.PlayGameSound = true
+	if !s.states.MusicStates.PlayGameSound{
+		s.states.MusicStates.PlayGameSound = true
 		go func(){
 			sound, err := os.Open("StartSound.mp3")
 			if err != nil{
@@ -49,7 +49,7 @@ func (s *S) Play(){
 				done <- true
 			})))
 			<- done
-			s.states.ComponentsStates.PlayGameSound = false
+			s.states.MusicStates.PlayGameSound = false
 		}()
 	}
 }

@@ -168,6 +168,7 @@ func (n N) FormatToWorkWith(buff []byte)[]byte{
 }
 
 func (n *N) IsOld(buff []byte)bool{
+	//Checks whether response is old
 
 	num := n.Unformat(string(buff))
 	if num != currindex{

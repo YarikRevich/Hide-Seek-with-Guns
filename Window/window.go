@@ -1,8 +1,9 @@
 package Window
 
 import (
-	"Game/Utils"
 	"time"
+	"Game/Utils"
+	"Game/Heroes/Users"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -13,83 +14,84 @@ import (
 
 
 type MenuImages struct{
-	StartMenuBG *pixel.Sprite
-	CreatioLobbyMenuBG *pixel.Sprite
-	JoinLobbyMenuBG *pixel.Sprite
-	WaitRoomMenuBG *pixel.Sprite
-	WaitRoomJoinBG *pixel.Sprite
-	Game *pixel.Sprite
-	HorDoor *pixel.Sprite
-	VerDoor *pixel.Sprite
-	Darkness *pixel.Sprite
-	GoldChest *pixel.Sprite
+	StartMenuBG                          *pixel.Sprite
+	CreatioLobbyMenuBG                   *pixel.Sprite
+	JoinLobbyMenuBG                      *pixel.Sprite
+	WaitRoomMenuBG                       *pixel.Sprite
+	WaitRoomJoinBG                       *pixel.Sprite
+	Game                                 *pixel.Sprite
+	HorDoor                              *pixel.Sprite
+	VerDoor                              *pixel.Sprite
+	Darkness                             *pixel.Sprite
+	GoldChest                            *pixel.Sprite
+	CreationLobbyMenuBGPressedButton     *pixel.Sprite
+	WaitRoomPressedButton                *pixel.Sprite
 }
 
 type TextAreas struct{
-	WriteIDTextArea *text.Text
-	CreateLobbyInput *CreateLobbyInput
+	WriteIDTextArea        *text.Text
+	CreateLobbyInput       *CreateLobbyInput
 	NewMembersAnnouncement *text.Text
-	NewMembersTextArea *text.Text
-	CurrentLobbyIDArea *text.Text
-	JoinLobbyAnnouncement *text.Text
-	JoinLobbyInput *JoinLobbyInput
+	NewMembersTextArea     *text.Text
+	CurrentLobbyIDArea     *text.Text
+	JoinLobbyAnnouncement  *text.Text
+	JoinLobbyInput         *JoinLobbyInput
 	LobbyDoesNotExistError *text.Text
 }
 
 type JoinLobbyInput struct{
 	InputLobbyIDTextArea *text.Text
-	WrittenText []string
+	WrittenText          []string
 }
 
 type CreateLobbyInput struct{
 	InputLobbyIDTextArea *text.Text
-	WrittenText []string
+	WrittenText          []string
 }
 
 type WindowUpdation struct{
-	StartMenuFrame int
-	CreationMenuFrame int
+	StartMenuFrame     int
+	CreationMenuFrame  int
 	JoinLobbyMenuFrame int
-	WaitRoomFrame int
+	WaitRoomFrame      int
 }
 
 type WaitRoom struct{
-	RoomType string
+	RoomType       string
 	GettingUpdates bool
-	NewMembers []string
+	NewMembers     []string
+}
+
+type GameProcess struct{
+	OtherUsers []*Users.User
 }
 
 type Components struct{
 	AvailableHeroImages map[string]*pixel.Sprite
-	AvPlacesForSpaws []pixel.Vec
+	AvPlacesForSpaws    []pixel.Vec
 }
 
 type Cam struct{
-	CamPos pixel.Vec
+	CamPos  pixel.Vec
 	CamZoom float64
 }
 
 type WindowConfig struct{
-	Win *pixelgl.Window
-	BGImages *MenuImages
-	TextAreas *TextAreas
+	Win            *pixelgl.Window
+	BGImages       *MenuImages
+	TextAreas      *TextAreas
 	WindowUpdation *WindowUpdation
-	Components *Components
-	WindowError *WindowError
-	WaitRoom *WaitRoom
-	Senders *Senders
-	Cam *Cam
+	Components     *Components
+	WindowError    *WindowError
+	WaitRoom       *WaitRoom
+	GameProcess    *GameProcess
+	Cam            *Cam
 }
 
 type WindowError struct{
 	LobbyDoesNotExist bool
-	LobbyErrorStop time.Time
-	LobbyErrorText string
-}
-
-type Senders struct{
-	JoinRoom bool
-	CreateRoom bool
+	LobbyErrorStop    time.Time
+	LobbyErrorText    string
 }
 
 func CreateWindow()WindowConfig{
@@ -103,12 +105,28 @@ func CreateWindow()WindowConfig{
 	if err != nil{
 		panic(err)
 	}
-	textArea := TextAreas{CreateLobbyInput: new(CreateLobbyInput), JoinLobbyInput: new(JoinLobbyInput)}
-	return WindowConfig{Win: win, BGImages: new(MenuImages), TextAreas: &textArea, WindowUpdation: new(WindowUpdation), WindowError: new(WindowError), Components: new(Components), WaitRoom: new(WaitRoom), Cam: new(Cam), Senders: new(Senders)}
+	textArea := TextAreas{
+		CreateLobbyInput: new(CreateLobbyInput),
+		JoinLobbyInput:   new(JoinLobbyInput),
+	}
+	return WindowConfig{
+		Win: win,
+		BGImages:       new(MenuImages),
+		TextAreas:      &textArea,
+		WindowUpdation: new(WindowUpdation),
+		WindowError:    new(WindowError), 
+		Components:     new(Components), 
+		WaitRoom:       new(WaitRoom), 
+		GameProcess:    new(GameProcess),
+		Cam:            new(Cam),
+	}
 }
 
 func (winConf *WindowConfig)UpdateBackground(){
 	winConf.Win.Clear(colornames.Black)
+}
+
+func (winConf *WindowConfig)DrawStartMenuBG(){
 	winConf.BGImages.StartMenuBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
@@ -154,7 +172,7 @@ func (winConf *WindowConfig)DrawBackgroundImage(){
 }
 
 func (winConf *WindowConfig)LoadCreationLobbyMenuBG(){
-	image, err := Utils.LoadImage("SysImages/CreatLobbImage.png")
+	image, err := Utils.LoadImage("SysImages/CreateLobbyImage.png")
 	if err != nil{
 		panic(err)
 	}
@@ -163,7 +181,6 @@ func (winConf *WindowConfig)LoadCreationLobbyMenuBG(){
 }
 
 func (winConf *WindowConfig)DrawCreationLobbyMenuBG(){
-	winConf.Win.Clear(colornames.Black)
 	winConf.BGImages.CreatioLobbyMenuBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
@@ -177,7 +194,6 @@ func (winConf *WindowConfig)LoadWaitRoomMenuBG(){
 }
 
 func (winConf *WindowConfig)DrawWaitRoomMenuBG(){
-	winConf.Win.Clear(colornames.Black)
 	winConf.BGImages.WaitRoomMenuBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
@@ -191,7 +207,6 @@ func (winConf *WindowConfig)LoadJoinLobbyMenu(){
 }
 
 func (winConf *WindowConfig)DrawJoinLobbyMenuBG(){
-	winConf.Win.Clear(colornames.Black)
 	winConf.BGImages.JoinLobbyMenuBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
@@ -205,7 +220,6 @@ func (winConf *WindowConfig)LoadWaitRoomJoinBG(){
 }
 
 func (winConf *WindowConfig)DrawWaitRoomJoinBG(){
-	winConf.Win.Clear(colornames.Black)
 	winConf.BGImages.WaitRoomJoinBG.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
@@ -227,7 +241,6 @@ func (winConf *WindowConfig)LoadGameBackground(){
 }
 
 func (winConf *WindowConfig)DrawGameBackground(){
-	winConf.Win.Clear(colornames.Black)
 	winConf.BGImages.Game.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
@@ -295,6 +308,32 @@ func (winConf WindowConfig)DrawGoldChest(){
 	}
 }
 
+func (winConf *WindowConfig)LoadCreationLobbyMenuBGPressedButton(){
+	image, err := Utils.LoadImage("SysImages/CreateLobbyImagePressedButton.png")
+	if err != nil{
+		panic(err)
+	}
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.CreationLobbyMenuBGPressedButton = sprite
+}
+
+func (winConf *WindowConfig)DrawCreationLobbyMenuBGPressedButton(){
+	winConf.BGImages.CreationLobbyMenuBGPressedButton.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+}
+
+func(winConf *WindowConfig)LoadWaitRoomPressedButton(){
+	image, err := Utils.LoadImage("SysImages/WaitRoomPressedButton.png")
+	if err != nil{
+		panic(err)
+	}
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.WaitRoomPressedButton = sprite
+}
+
+func(winConf *WindowConfig)DrawWaitRoomPressedButton(){
+	winConf.BGImages.WaitRoomPressedButton.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+}
+
 func (winConf WindowConfig)LoadAllImageComponents(){
 	//It loads all the images for working.
 
@@ -303,6 +342,8 @@ func (winConf WindowConfig)LoadAllImageComponents(){
 	winConf.LoadWaitRoomMenuBG()
 	winConf.LoadWaitRoomJoinBG()
 	winConf.LoadGameBackground()
+	winConf.LoadCreationLobbyMenuBGPressedButton()
+	winConf.LoadWaitRoomPressedButton()
 	winConf.LoadHorDoor()
 	winConf.LoadVerDoor()
 	winConf.LoadDarkness()

@@ -2,13 +2,11 @@ package Utils
 
 import (
 	"fmt"
-	"github.com/galsondor/go-ascii"
 	"time"
 	"math/rand"
 	"image"
 	"os"
 	"os/exec"
-	"reflect"
 	"strings"
 	"github.com/faiface/pixel"
 	_ "image/png"
@@ -25,12 +23,12 @@ func MessageIsEmpty(message []byte)bool{
 	return true
 }
 
-func CleanGottenResponse(resp string)string{
+func CleanGottenResponse(resp []byte)string{
 	//Cleanes passed just returned resp and returns cleaned version.
 
 	var cleanedResponse string
 	for _, value := range resp{
-		if ascii.IsPrint(byte(value)){
+		if value != 0{
 			cleanedResponse += string(value)
 		}
 	}
@@ -105,12 +103,23 @@ func GetAvailableHeroImages()map[string]*pixel.Sprite{
 	return listOfHeroes
 }
 
-func CheckErrorResp(resp string)bool{
+func CheckErrorResp(resp []byte)bool{
 
 	cleanedResp := CleanGottenResponse(resp)
 	splitedOne := strings.Split(cleanedResp, "@")
 	if len(splitedOne) > 1{
 		if splitedOne[0] == "error"{
+			return true
+		}
+	}
+	return false
+}
+
+func CheckLobbyIsReady(resp []byte)bool{
+	cleanedResp := CleanGottenResponse(resp)
+	splitedOne := strings.Split(cleanedResp, "@")
+	if len(splitedOne) > 1{
+		if splitedOne[1] == "lobby is ready"{
 			return true
 		}
 	}
@@ -127,13 +136,7 @@ func GetRandomSpawn()pixel.Vec{
 	return spawnPlaces[GetRandNum(len(spawnPlaces))]
 }
 
-func GetValueFromInterface(value string, inter interface{})interface{}{
-	refl := reflect.ValueOf(inter)
-	for i:=0; i<= refl.NumField(); i++{
-		if refl.Type().Field(i).Name == value{
-			return refl.Elem().Field(i)
-		}
-	}
-	return inter
+func RemoveIndex(s []string, index int)[]string{
+	return append(s[:index], s[index+1:]...)
 }
 

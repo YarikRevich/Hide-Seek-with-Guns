@@ -1,19 +1,48 @@
 package States
 
 type States struct{
-	StartMenu bool
-	CreateLobbyMenu bool
-	JoinLobbyMenu bool
-	WaitRoom bool
-	Game bool
-	ComponentsStates *ComponentsStates
+	MainStates       *MainStates
+	MusicStates      *MusicStates
+	SendStates       *SendStates
+	NetworkingStates *NetworkingStates
 }
 
-type ComponentsStates struct{
+type MainStates struct{
+	StartMenu       bool
+	CreateLobbyMenu bool
+	JoinLobbyMenu   bool
+	WaitRoom        bool
+	Game            bool
+}
+
+type MusicStates struct{
 	PlayGameSound bool
 }
 
-func (s *States)SetStartMenu(){
+type SendStates struct{
+	//This struct contains all the states
+	//for sending request to the network for
+	//'create' and 'join' rooms. E.g you have
+	//pressed 'create lobby' button, now, there 'createroom'
+	//state is active and it says there will be sent a request
+	//to get the confirmation about the lobby creation
+
+	//It is a state for 'join lobby' button to send a request
+	//to get the confirmation about joining to lobby
+	JoinRoom   bool
+
+	//It is a state for 'create lobby' button to send a request
+	//to get the confirmation about lobby creation
+	CreateRoom bool
+}
+
+type NetworkingStates struct{
+	LobbyWaitRoom bool
+	GameProcess   bool
+}
+
+
+func (s *MainStates)SetStartMenu(){
 	// Sets state to 'StartMenu'
 
 	s.StartMenu = true
@@ -23,7 +52,7 @@ func (s *States)SetStartMenu(){
 	s.Game = false
 }
 
-func (s *States)SetCreateLobbyMenu(){
+func (s *MainStates)SetCreateLobbyMenu(){
 	//Sets state to 'CreateLobbyMenu'
 
 	s.StartMenu = false
@@ -33,7 +62,7 @@ func (s *States)SetCreateLobbyMenu(){
 	s.Game = false
 }
 
-func (s *States)SetJoinLobbyMenu(){
+func (s *MainStates)SetJoinLobbyMenu(){
 	//Sets state to 'JoinLobbyMenu'
 
 	s.StartMenu = false
@@ -43,7 +72,7 @@ func (s *States)SetJoinLobbyMenu(){
 	s.Game = false
 }
 
-func (s *States)SetWaitRoom(){
+func (s *MainStates)SetWaitRoom(){
 	//Sets state to 'WaitRoom'
 
 	s.StartMenu = false
@@ -53,7 +82,7 @@ func (s *States)SetWaitRoom(){
 	s.Game = false
 }
 
-func (s *States)SetGame(){
+func (s *MainStates)SetGame(){
 	//Sets state to 'Game'
 
 	s.StartMenu = false
