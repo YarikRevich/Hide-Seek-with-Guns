@@ -26,9 +26,12 @@ type MenuImages struct{
 	GoldChest                            *pixel.Sprite
 	CreationLobbyMenuBGPressedButton     *pixel.Sprite
 	WaitRoomPressedButton                *pixel.Sprite
+	StartMenuPressedCreateButton         *pixel.Sprite
+	StartMenuPressedJoinButton           *pixel.Sprite
 }
 
 type TextAreas struct{
+	GameLogo               *text.Text
 	WriteIDTextArea        *text.Text
 	CreateLobbyInput       *CreateLobbyInput
 	NewMembersAnnouncement *text.Text
@@ -62,6 +65,12 @@ type WaitRoom struct{
 	NewMembers     []string
 }
 
+type StartMenu struct{
+	DrawedTemporally []float64
+	DrawCounter       int
+	Regime            int
+}
+
 type GameProcess struct{
 	OtherUsers []*Users.User
 }
@@ -84,6 +93,7 @@ type WindowConfig struct{
 	Components     *Components
 	WindowError    *WindowError
 	WaitRoom       *WaitRoom
+	StartMenu      *StartMenu
 	GameProcess    *GameProcess
 	Cam            *Cam
 }
@@ -118,6 +128,7 @@ func CreateWindow()WindowConfig{
 		Components:     new(Components), 
 		WaitRoom:       new(WaitRoom), 
 		GameProcess:    new(GameProcess),
+		StartMenu:      new(StartMenu),
 		Cam:            new(Cam),
 	}
 }
@@ -147,6 +158,7 @@ func (winConf *WindowConfig)DrawErrorText(){
 
 func (winConf *WindowConfig)LoadAllTextAreas(){
 	atlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
+	winConf.TextAreas.GameLogo = text.New(pixel.V(730, 400), atlas)
 	winConf.TextAreas.WriteIDTextArea = text.New(pixel.V(220, 460), atlas)
 	winConf.TextAreas.CreateLobbyInput.InputLobbyIDTextArea = text.New(pixel.V(285, 332), atlas)
 	winConf.TextAreas.NewMembersAnnouncement = text.New(pixel.V(240, 495), atlas)
@@ -163,7 +175,7 @@ func (winConf *WindowConfig)LoadAllTextAreas(){
 func (winConf *WindowConfig)DrawBackgroundImage(){
 	//Draws background image 
 
-	image, err := Utils.LoadImage("SysImages/BackgroundImage.png")
+	image, err := Utils.LoadImage("SysImages/StartMenu.png")
 	if err != nil{
 		panic(err)
 	}
@@ -334,6 +346,32 @@ func(winConf *WindowConfig)DrawWaitRoomPressedButton(){
 	winConf.BGImages.WaitRoomPressedButton.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
 }
 
+func(winConf *WindowConfig)LoadStartMenuPressedCreateButton(){
+	image, err := Utils.LoadImage("SysImages/StartMenuPressedCreateButton.png")
+	if err != nil{
+		panic(err)
+	}
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.StartMenuPressedCreateButton = sprite
+}
+
+func(winConf *WindowConfig)DrawStartMenuPressedCreateButton(){
+	winConf.BGImages.StartMenuPressedCreateButton.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+}
+
+func(winConf *WindowConfig)LoadStartMenuPressedJoinButton(){
+	image, err := Utils.LoadImage("SysImages/StartMenuPressedJoinButton.png")
+	if err != nil{
+		panic(err)
+	}
+	sprite := pixel.NewSprite(image, image.Bounds())
+	winConf.BGImages.StartMenuPressedJoinButton = sprite
+}
+
+func(winConf *WindowConfig)DrawStartMenuPressedJoinButton(){
+	winConf.BGImages.StartMenuPressedJoinButton.Draw(winConf.Win, pixel.IM.Moved(winConf.Win.Bounds().Center()))
+}
+
 func (winConf WindowConfig)LoadAllImageComponents(){
 	//It loads all the images for working.
 
@@ -344,6 +382,8 @@ func (winConf WindowConfig)LoadAllImageComponents(){
 	winConf.LoadGameBackground()
 	winConf.LoadCreationLobbyMenuBGPressedButton()
 	winConf.LoadWaitRoomPressedButton()
+	winConf.LoadStartMenuPressedCreateButton()
+	winConf.LoadStartMenuPressedJoinButton()
 	winConf.LoadHorDoor()
 	winConf.LoadVerDoor()
 	winConf.LoadDarkness()

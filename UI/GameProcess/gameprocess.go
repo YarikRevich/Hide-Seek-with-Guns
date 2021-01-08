@@ -54,7 +54,8 @@ func (g *GameProcess)ProcessNetworking(){
 
 			if ConfigParsers.IsUsersInfo(string(response)){
 				if cleaned := Utils.CleanGottenResponse([]byte(strings.Split(string(response), "~/")[1])); len(cleaned) != 0{
-					ConfigParsers.UnparseOthers(cleaned, *g.userConfig, &g.winConf.GameProcess.OtherUsers)
+					g.winConf.GameProcess.OtherUsers = []*Users.User{}
+					ConfigParsers.UnparseOthers(cleaned, *g.userConfig, g.winConf)
 				}
 			}
 			g.currState.NetworkingStates.GameProcess = false

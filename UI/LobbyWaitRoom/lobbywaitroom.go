@@ -79,7 +79,7 @@ func (l *LobbyWaitRoom)ProcessNetworking(){
 
 func (l *LobbyWaitRoom)ProcessKeyboard(){
 
-	if (l.winConf.Win.MousePosition().X >= 361 && l.winConf.Win.MousePosition().X <= 596) && (l.winConf.Win.MousePosition().Y >= 73 && l.winConf.Win.MousePosition().Y <= 165){
+	if l.winConf.WaitRoom.RoomType == "create" && (l.winConf.Win.MousePosition().X >= 361 && l.winConf.Win.MousePosition().X <= 596) && (l.winConf.Win.MousePosition().Y >= 73 && l.winConf.Win.MousePosition().Y <= 165){
 		l.winConf.DrawWaitRoomPressedButton()
 	}
 

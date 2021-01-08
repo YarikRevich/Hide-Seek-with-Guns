@@ -1,15 +1,25 @@
 package ConfigParsers
 
 import (
+	"Game/Heroes/Users"
+	"Game/Window"
 	"fmt"
 	"strconv"
 	"strings"
-	"Game/Heroes/Users"
 )
 
 func IsUsersInfo(response string)bool{
 	if strings.Contains(response, "GetUsersInfo"){
 		return true
+	}
+	return false
+}
+
+func IsAppended(newUser *Users.User, winConf *Window.WindowConfig)bool{
+	for _, value := range winConf.GameProcess.OtherUsers{
+		if value.Username == newUser.Username{
+			return true
+		}
 	}
 	return false
 }
@@ -59,7 +69,7 @@ func UnparseCurrent(response string, userConfig *Users.User){
 }
 
 
-func UnparseOthers(response string, currentUser Users.User, otherUsers *[]*Users.User){
+func UnparseOthers(response string, currentUser Users.User, winConf *Window.WindowConfig){
 	splitedUsers := strings.Split(response, "/::/")
 	for _, value := range splitedUsers{
 		if !strings.Contains(value, currentUser.Username){
@@ -95,7 +105,10 @@ func UnparseOthers(response string, currentUser Users.User, otherUsers *[]*Users
 			newUser.HeroPicture = splitedUserConf[6]
 			newUser.UpdationRun = updationRun
 			newUser.CurrentFrameMatrix = currentFrameMatrix
-			*otherUsers = append(*otherUsers, &newUser)
+			
+			if !IsAppended(&newUser, winConf){
+				winConf.GameProcess.OtherUsers = append(winConf.GameProcess.OtherUsers, &newUser)
+			}
 		}
 	}
 }
