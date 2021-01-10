@@ -1,22 +1,22 @@
 package main
 
 import (
-	"Game/Components/Map"
-	"Game/Components/Start"
-	"Game/Components/States"
-	"Game/Heroes/Users"
-	"Game/Server"
+	"fmt"
+	"time"
 	"Game/UI"
-	"Game/UI/CreationLobbyMenu"
+	"Game/Utils"
+	"Game/Window"
+	"Game/Server"
+	"Game/Utils/Log"
+	"Game/Heroes/Users"
+	"Game/UI/StartMenu"
+	"Game/Components/Map"
 	"Game/UI/GameProcess"
 	"Game/UI/JoinLobbyMenu"
 	"Game/UI/LobbyWaitRoom"
-	"Game/UI/StartMenu"
-	"Game/Utils"
-	"Game/Utils/Log"
-	"Game/Window"
-	"fmt"
-	"time"
+	"Game/Components/Start"
+	"Game/Components/States"
+	"Game/UI/CreationLobbyMenu"
 
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/gookit/color"
@@ -76,6 +76,7 @@ func run(){
 	//Gets info from user to place his name and server's name
 	username, server := Start.GetStartInfo()
 	conn := Server.GetConnection(server)
+	defer conn.Close()
 
 	//Create window and place all the components
 	winConf := Window.CreateWindow()
@@ -146,9 +147,9 @@ func run(){
 			winConf.Win.Update()
 		}
 	}
+	color.Green.Println("Goodbye!")
 }
 
 func main(){
 	pixelgl.Run(run)
-	color.Green.Println("Goodbye!")
 }

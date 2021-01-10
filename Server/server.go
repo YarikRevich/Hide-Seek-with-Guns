@@ -3,9 +3,10 @@ package Server
 import (
 	"fmt"
 	"net"
-	"time"
-	"strings"
+	"os"
 	"strconv"
+	"strings"
+	"time"
 )
 
 const(
@@ -134,7 +135,6 @@ func (n *N) Read() []byte {
 	//Tries to read upcoming bytes
 
 	buff := make([]byte, 30000)
-	var timeout int = 0
 	for {
 		n.conn.SetReadDeadline(time.Now().Add(delay))
 		num, err := n.conn.Read(buff)
@@ -145,10 +145,8 @@ func (n *N) Read() []byte {
 			return n.FormatToWorkWith(buff)
 
 		}
-		timeout++
-		if timeout == n.regime.tryLimit{
+		if os.IsTimeout(err){
 			n.Write()
-			timeout = 0
 		}
 	}
 }

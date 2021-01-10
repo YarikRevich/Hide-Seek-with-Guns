@@ -66,20 +66,15 @@ func (g *GameProcess)ProcessNetworking(){
 func (g *GameProcess)ProcessKeyboard(){
 
 	currPosition := pixel.V(float64(g.userConfig.X), float64(g.userConfig.Y))
-	vector, _, ok := g.mapComponents.GetCollisions().IsDoor(currPosition)
-
-	if ok{
-		g.mapComponents.GetCollisions().DeleteDoor(vector)
-	}
-	if !g.mapComponents.GetCollisions().IsNearDeletedDoor(currPosition){
-	 	g.mapComponents.GetCollisions().RecreateDeletedDoors()
-	}
+	g.mapComponents.GetCollisions().GetDoorsCollisions().DoorTraker(currPosition)
 	
 	switch {
 	case g.winConf.Win.Pressed(pixelgl.KeyW):
-		if g.mapComponents.GetCollisions().IsCollision(pixel.V(float64(g.userConfig.X), float64(g.userConfig.Y+2))){
+		coll := g.mapComponents.GetCollisions().IsCritical(pixel.V(float64(g.userConfig.X), float64(g.userConfig.Y+2)), g.winConf.GameProcess.OtherUsers, "top")
+		if coll{
 			return
 		}
+		
 		if g.userConfig.Y <= g.mapComponents.GetHeroBorder().Top(){
 			g.userConfig.Y += 3
 		}
@@ -89,9 +84,11 @@ func (g *GameProcess)ProcessKeyboard(){
 			}
 		}
 	case g.winConf.Win.Pressed(pixelgl.KeyA):
-		if g.mapComponents.GetCollisions().IsCollision(pixel.V(float64(g.userConfig.X-2), float64(g.userConfig.Y))){
+		coll := g.mapComponents.GetCollisions().IsCritical(pixel.V(float64(g.userConfig.X-2), float64(g.userConfig.Y)), g.winConf.GameProcess.OtherUsers, "left")
+		if coll{
 			return
 		}
+		
 		if g.userConfig.X >= g.mapComponents.GetHeroBorder().Left(){
 			g.userConfig.X -= 3
 		}
@@ -101,9 +98,11 @@ func (g *GameProcess)ProcessKeyboard(){
 			}
 		}
 	case g.winConf.Win.Pressed(pixelgl.KeyS):
-		if g.mapComponents.GetCollisions().IsCollision(pixel.V(float64(g.userConfig.X), float64(g.userConfig.Y-2))){
+		coll := g.mapComponents.GetCollisions().IsCritical(pixel.V(float64(g.userConfig.X), float64(g.userConfig.Y-2)), g.winConf.GameProcess.OtherUsers, "bottom")
+		if coll{
 			return
 		}
+
 		if g.userConfig.Y >= g.mapComponents.GetHeroBorder().Bottom(){
 			g.userConfig.Y -= 3
 		}
@@ -113,9 +112,11 @@ func (g *GameProcess)ProcessKeyboard(){
 			}
 		}
 	case g.winConf.Win.Pressed(pixelgl.KeyD):
-		if g.mapComponents.GetCollisions().IsCollision(pixel.V(float64(g.userConfig.X+2), float64(g.userConfig.Y))){
+		coll := g.mapComponents.GetCollisions().IsCritical(pixel.V(float64(g.userConfig.X+2), float64(g.userConfig.Y)), g.winConf.GameProcess.OtherUsers, "right")
+		if coll{
 			return
 		}
+
 		if g.userConfig.X <= g.mapComponents.GetHeroBorder().Right(){
 			g.userConfig.X += 3
 		}
@@ -147,7 +148,7 @@ func (g *GameProcess)DrawElements(){
 
 	//g.winConf.DrawGoldChest()
 
-	g.mapComponents.GetCollisions().DrawDoors(g.winConf.DrawHorDoor, g.winConf.DrawVerDoor)
+	g.mapComponents.GetCollisions().GetDoorsCollisions().DrawDoors(g.winConf.DrawHorDoor, g.winConf.DrawVerDoor)
 
 	Animation.MoveAndChangeAnim(g.userConfig, g.winConf)
 

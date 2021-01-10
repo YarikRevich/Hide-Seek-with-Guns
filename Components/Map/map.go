@@ -7,10 +7,26 @@ import (
 	"github.com/faiface/pixel"
 )
 
+
+
+//!!! IT IS A PART OF HERO BORDERS' OPTIONS !!!
+
+
+
 type HeroBorder interface {
+	//It has all the important methods
+	//for hero border tracking 
+
+	//Returns a right border of map
 	Right() int
+
+	//Returns a top border of map
 	Top() int
+
+	//Returns a bottom border of map
 	Bottom() int
+
+	//Returns a left border of map
 	Left() int
 }
 
@@ -32,12 +48,27 @@ func (b HB) Bottom() int {
 	return -225
 }
 
+//!!! IT IS A CAM BORDERS' OPTIONS
+
 type CamBorder interface {
+	//It has all the important methods
+	//for cam border tracking 
+
+	//Inits fullmap for the futher
+	//border tracking
 	Init(FullMap *pixel.Sprite)
-	Right() float64
-	Top() float64
-	Bottom() float64
-	Left() float64
+
+	//Returns a right border for camera
+	Right()                    float64
+
+	//Returns a top border for camera
+	Top()                      float64
+
+	//Returns a bottom border for camera
+	Bottom()                   float64
+
+	//Returns a left border for camera
+	Left()                     float64
 }
 
 type CB struct {
@@ -64,29 +95,46 @@ func (c CB) Bottom() float64 {
 	return c.FullMap.Picture().Bounds().Center().Y / 17
 }
 
-type Collisions interface {
+
+
+//!!! IT IS A PART OF GENERAL COLLISIONS !!!
+
+
+
+type UtilCollisions interface{
+	//Main utilible methods for collisions checking ...
+
+	Beetwen(float64, float64, float64, float64) bool
+}
+
+type UC struct{}
+
+
+func (c UC) Beetwen(x float64, cx float64, coefp float64, coefn float64) bool {
+	//Checks whether current coords are in the
+	//available range ...
+
+	if ((x >= (cx - coefp)) && (x <= cx)) || ((x >= (cx + coefn)) && (x <= cx)) {
+		return true
+	}
+	return false
+}
+
+
+type MapCollisions interface{
+	//Configures map collisions ...
+
 	Init()
-	Beetwen(x float64, cx float64) bool
-	IsCollision(vector pixel.Vec) bool
-	IsDoor(vector pixel.Vec) (pixel.Vec, string, bool)
-	DeleteDoor(vector pixel.Vec)
-	IsNearDeletedDoor(vactor pixel.Vec) bool
-	RecreateDeletedDoors()
-	DrawDoors(drawHor func(pixel.Vec), drawVer func(pixel.Vec))
+	IsColumn(pixel.Vec, UtilCollisions) bool
 }
 
-type C struct {
-	Colls map[string][][]pixel.Vec
-	Doors map[string][]pixel.Vec
-	DeletedDoors map[string][]pixel.Vec
+type MC struct{
+	Colls        map[string][][]pixel.Vec
 }
 
-func (c *C) Init() {
-	//Inits all the collisions collected in a specially
-	//sorted map.
-
-	c.Colls = map[string][][]pixel.Vec{
-		"ver": [][]pixel.Vec{
+func (m *MC) Init(){
+	m.Colls = map[string][][]pixel.Vec{
+		"ver": {
 			[]pixel.Vec{pixel.V(-84, 768), pixel.V(-84, 672)},
 			[]pixel.Vec{pixel.V(-49, 768), pixel.V(-49, 672)},
 			[]pixel.Vec{pixel.V(260, 757), pixel.V(260, 448)},
@@ -107,7 +155,7 @@ func (c *C) Init() {
 			[]pixel.Vec{pixel.V(329, -168), pixel.V(329, -227)},
 			[]pixel.Vec{pixel.V(329, 37), pixel.V(329, -116)},
 		},
-		"hor": [][]pixel.Vec{
+		"hor": {
 			[]pixel.Vec{pixel.V(-79, 775), pixel.V(-55, 775)},
 			[]pixel.Vec{pixel.V(-79, 676), pixel.V(-55, 676)},
 			[]pixel.Vec{pixel.V(268, 772), pixel.V(292, 676)},
@@ -138,12 +186,47 @@ func (c *C) Init() {
 			[]pixel.Vec{pixel.V(110, 46), pixel.V(300, 46)},
 		},
 	}
+}
 
-	c.Doors = map[string][]pixel.Vec{
-		"hor": []pixel.Vec{
+func (c MC) IsColumn(vector pixel.Vec, util UtilCollisions) bool {
+	//Checks whether next position is a collision.
+
+	for _, vec := range c.Colls["ver"] {
+		if util.Beetwen(vector.X, vec[0].X, 6.5, 6.5) && ((vec[0].Y >= vector.Y) && (vec[1].Y <= vector.Y)) {
+			return true
+		}
+	}
+
+	for _, vec := range c.Colls["hor"] {
+		if util.Beetwen(vector.Y, vec[0].Y, 6.5, 6.5) && ((vec[0].X <= vector.X) && (vec[1].X >= vector.X)) {
+			return true
+		}
+	}
+	return false
+}
+
+type DoorsCollisions interface{
+	Init()
+	DoorTraker(pixel.Vec)
+	IsDoor(pixel.Vec)                          (pixel.Vec, string, bool)
+	DeleteDoor(pixel.Vec)
+	IsNearDeletedDoor(pixel.Vec)                bool
+	RecreateDeletedDoors()
+	DrawDoors(func(pixel.Vec), func(pixel.Vec))
+}
+
+type DC struct{
+	Doors        map[string][]pixel.Vec
+	DeletedDoors map[string][]pixel.Vec
+}
+
+func (d *DC) Init(){
+
+	d.Doors = map[string][]pixel.Vec{
+		"hor": {
 			pixel.V(6.5, 641),
 		},
-		"ver": []pixel.Vec{
+		"ver": {
 			pixel.V(-68, 780),
 			pixel.V(278, 784),
 			pixel.V(88.5, 410),
@@ -160,37 +243,21 @@ func (c *C) Init() {
 		},
 	}
 
-	c.DeletedDoors = map[string][]pixel.Vec{}
+	d.DeletedDoors = map[string][]pixel.Vec{}
 }
 
-func (c C) Beetwen(x float64, cx float64) bool {
-	//Checks whether current coords are in the
-	//available range.
+func (c *DC) DoorTraker(vector pixel.Vec){
+	vector, _, ok := c.IsDoor(vector)
 
-	if ((x >= (cx - 8)) && (x <= cx)) || ((x >= (cx + 8)) && (x <= cx)) {
-		return true
+	if ok{
+		c.DeleteDoor(vector)
 	}
-	return false
+	if !c.IsNearDeletedDoor(vector){
+	 	c.RecreateDeletedDoors()
+	}
 }
 
-func (c C) IsCollision(vector pixel.Vec) bool {
-	//Checks whether next position is a collision.
-
-	for _, vec := range c.Colls["ver"] {
-		if c.Beetwen(vector.X, vec[0].X) && ((vec[0].Y >= vector.Y) && (vec[1].Y <= vector.Y)) {
-			return true
-		}
-	}
-
-	for _, vec := range c.Colls["hor"] {
-		if c.Beetwen(vector.Y, vec[0].Y) && ((vec[0].X <= vector.X) && (vec[1].X >= vector.X)) {
-			return true
-		}
-	}
-	return false
-}
-
-func (c C) IsDoor(vector pixel.Vec) (pixel.Vec, string, bool) {
+func (c *DC) IsDoor(vector pixel.Vec) (pixel.Vec, string, bool) {
 	//Checks whether next position is a door
 
 	for key, values := range c.Doors {
@@ -203,7 +270,7 @@ func (c C) IsDoor(vector pixel.Vec) (pixel.Vec, string, bool) {
 	return vector, "-", false
 }
 
-func (c *C) DeleteDoor(vector pixel.Vec) {
+func (c *DC) DeleteDoor(vector pixel.Vec) {
 	for variant, values := range c.Doors {
 		for index, value := range values {
 			if value.Eq(vector) {
@@ -214,7 +281,7 @@ func (c *C) DeleteDoor(vector pixel.Vec) {
 	}
 }
 
-func (c *C) IsNearDeletedDoor(vector pixel.Vec) bool{
+func (c *DC) IsNearDeletedDoor(vector pixel.Vec) bool{
 	for _, values := range c.DeletedDoors {
 		for _, value := range values {
 			if math.Abs(value.X-vector.X) <= 30 && math.Abs(value.Y-vector.Y) <= 60 {
@@ -225,7 +292,7 @@ func (c *C) IsNearDeletedDoor(vector pixel.Vec) bool{
 	return false
 }
 
-func (c *C) RecreateDeletedDoors() {
+func (c *DC) RecreateDeletedDoors() {
 	//Recrates deleted doors.
 
 	for variant, values := range c.DeletedDoors{
@@ -236,7 +303,7 @@ func (c *C) RecreateDeletedDoors() {
 	}
 }
 
-func (c C) DrawDoors(drawHor func(pixel.Vec), drawVer func(pixel.Vec)) {
+func (c DC) DrawDoors(drawHor func(pixel.Vec), drawVer func(pixel.Vec)) {
 	hor := c.Doors["hor"]
 	ver := c.Doors["ver"]
 	for _, value := range hor {
@@ -247,8 +314,149 @@ func (c C) DrawDoors(drawHor func(pixel.Vec), drawVer func(pixel.Vec)) {
 	}
 }
 
+
+//Main configurator for hero icon collisions ...
+
+type HeroCollisions interface{
+	IsHero(pixel.Vec, []*Users.User, UtilCollisions) heroPosControllers
+}
+
+type HC struct{}
+
+
+type heroPosControllers interface{
+	Top()    bool
+	Bottom() bool
+	Left()   bool
+	Right()  bool
+}
+
+type hP struct{
+	vector        pixel.Vec
+	othervectors []*Users.User
+	util          UtilCollisions
+}
+
+func (h *hP) Top()bool{
+	for _, value := range h.othervectors{
+		if math.Abs(float64(value.X)-h.vector.X) <= 10 && math.Abs(float64(value.Y)-h.vector.Y) <= 17{
+			return true
+		}
+	}
+	return false
+}
+
+func (h *hP) Bottom()bool{
+	for _, value := range h.othervectors{
+		if math.Abs(float64(value.X)-h.vector.X) <= 10 && math.Abs(float64(value.Y)-h.vector.Y) <= 17{
+			return true
+		}
+	}
+	return false
+}
+
+func (h *hP) Left()bool{
+	for _, value := range h.othervectors{
+		if math.Abs(float64(value.X)-h.vector.X) <= 10 && math.Abs(float64(value.Y)-h.vector.Y) <= 17{
+			return true
+		}
+	}
+	return false
+}
+
+func (h *hP) Right()bool{
+	for _, value := range h.othervectors{
+		if math.Abs(float64(value.X)-h.vector.X) <= 10 && math.Abs(float64(value.Y)-h.vector.Y) <= 17{
+			return true
+		}
+	}
+	return false
+}
+
+
+func (h *HC) IsHero(vector pixel.Vec, othervectors []*Users.User, util UtilCollisions) heroPosControllers{
+
+	return heroPosControllers(&hP{
+		vector:  vector,
+		othervectors: othervectors,
+		util: util,
+	})
+}
+
+
+//Inits all the types of collisions
+type Collisions interface {
+	Init()
+	IsCritical(pixel.Vec, []*Users.User, string) bool
+	GetHeroCollisions() HeroCollisions
+	GetDoorsCollisions() DoorsCollisions
+	GetMapCollisions() MapCollisions
+	GetUtilCollisions() UtilCollisions
+}
+
+type C struct {
+	HeroCollisions HeroCollisions
+	DoorsCollisions DoorsCollisions
+	MapCollisions MapCollisions
+	UtilCollisions UtilCollisions
+}
+
+func (c *C) Init() {
+	c.HeroCollisions = HeroCollisions(new(HC))
+	doorscoll := DoorsCollisions(new(DC))
+	doorscoll.Init()
+	c.DoorsCollisions = doorscoll
+	mapcoll := MapCollisions(new(MC))
+	mapcoll.Init()
+	c.MapCollisions = mapcoll
+	c.UtilCollisions = UtilCollisions(new(UC))
+	
+}
+
+func (c *C) IsCritical(vector pixel.Vec, otherusers []*Users.User, types string)bool{
+	//Checks whether each of beneath probable issues are existing
+	//If though only one does it returns true ...
+	
+	if c.GetMapCollisions().IsColumn(vector, c.GetUtilCollisions()){
+		return true
+	}
+	switch types{
+	case "top": 
+		return c.GetHeroCollisions().IsHero(vector, otherusers, c.GetUtilCollisions()).Top()
+	case "bottom":
+		return c.GetHeroCollisions().IsHero(vector, otherusers, c.GetUtilCollisions()).Bottom()
+	case "left":
+		return c.GetHeroCollisions().IsHero(vector, otherusers, c.GetUtilCollisions()).Left()
+	case "right":
+		return c.GetHeroCollisions().IsHero(vector, otherusers, c.GetUtilCollisions()).Right()
+	}
+	return false
+}
+
+func (c *C) GetHeroCollisions() HeroCollisions{
+	return c.HeroCollisions
+}
+
+func (c *C) GetDoorsCollisions() DoorsCollisions{
+	return c.DoorsCollisions
+}
+
+func (c *C) GetMapCollisions() MapCollisions{
+	return c.MapCollisions
+}
+
+func (c *C) GetUtilCollisions() UtilCollisions{
+	return c.UtilCollisions
+}
+
+
+
+///!!! IT IS A PART OF MAP ANALIZER !!!
+
+
+
 type Analizer interface {
-	Init(x float64, y float64, borders []int, collisions Collisions)
+	Init(float64, float64, []int, Collisions)
 	AnalizeAvailablePlaces()[]pixel.Vec
 	ChangeToBottom()
 	ChangeToBottomException()
@@ -263,7 +471,7 @@ type Analises struct {
 	Base        pixel.Vec
 	Regime      string
 	BeingPlaces []pixel.Vec
-	Collisions Collisions
+	Collisions  Collisions
 }
 
 func (A *Analises) Init(x float64, y float64, borders []int, collisions Collisions) {
@@ -312,8 +520,8 @@ func (A *Analises) AnalizeAvailablePlaces()[]pixel.Vec{
 		case "top":
 			var found bool = false
 			var exc bool = false
-			if A.Collisions.IsCollision(pixel.V(A.Base.X, A.Base.Y+46)){
-				if !A.Collisions.IsCollision(pixel.V(A.Base.X+20, A.Base.Y)){
+			if A.Collisions.GetMapCollisions().IsColumn(pixel.V(A.Base.X, A.Base.Y+46), A.Collisions.GetUtilCollisions()){
+				if !A.Collisions.GetMapCollisions().IsColumn(pixel.V(A.Base.X+20, A.Base.Y), A.Collisions.GetUtilCollisions()){
 					A.ChangeToBottom()
 					found = true
 				}else{
@@ -350,8 +558,8 @@ func (A *Analises) AnalizeAvailablePlaces()[]pixel.Vec{
 		case "bottom":
 			var found bool = false
 			var exc bool = false
-			if A.Collisions.IsCollision(pixel.V(A.Base.X, A.Base.Y-46)){
-				if !A.Collisions.IsCollision(pixel.V(A.Base.X+20, A.Base.Y)){
+			if A.Collisions.GetMapCollisions().IsColumn(pixel.V(A.Base.X, A.Base.Y-46), A.Collisions.GetUtilCollisions()){
+				if !A.Collisions.GetMapCollisions().IsColumn(pixel.V(A.Base.X+20, A.Base.Y), A.Collisions.GetUtilCollisions()){
 					A.ChangeToTop()
 					found = true
 				}else{
@@ -390,7 +598,11 @@ func (A *Analises) AnalizeAvailablePlaces()[]pixel.Vec{
 	return A.BeingPlaces
 }
 
-//~~~~~~~~~It is a part for cam~~~~~~~~~~
+
+
+//!!! IT IS A PART OF GENERAL CAMERA SETTINGS !!!
+
+
 
 type Cam interface{
 	//Special interface to get into the functionality of camera
@@ -432,9 +644,9 @@ type CM struct{
 func (c *CM)Init(winconf *Window.WindowConfig, userconfig Users.User, borders CamBorder){
 	//Inits important dependences
 
-	c.winconf = winconf
+	c.winconf    = winconf
 	c.userconfig = userconfig
-	c.borders = borders
+	c.borders    = borders
 }
 
 func (c *CM)collibrateBottom()float64{
@@ -523,19 +735,50 @@ func (c *CM)UpdateCam(){
 	c.winconf.Win.SetMatrix(cam)
 }
 
+
+
+//!!! IT IS A PART OF GENERAL MAP CONFIGURATOR !!!
+
+
+
 type MapConf interface{
+	//It is a main interface for map configuration
+
+	//Inits all the interfaces
 	Init()
+
+	//Low level configurator for hero borders
 	ConfHeroBorder()
+
+	//Low level configurator for cam border
 	ConfCamBorder(*Window.WindowConfig)
+
+	//Low level configurator for map analizer
 	ConfAnalizer()
+
+	//Low level configurator for collisions
 	ConfCollisions()
-	ConfCam(winConf *Window.WindowConfig, userConfig Users.User)
-	ConfAll(winConf *Window.WindowConfig, userConfig Users.User)
-	GetHeroBorder()HeroBorder
-	GetCamBorder()CamBorder
-	GetCollisions()Collisions
-	GetAnailizer()Analizer
-	GetCam()Cam
+
+	//Low level configurator for camera
+	ConfCam(*Window.WindowConfig, Users.User)
+
+	//High level configurator for all beneath listed configurators
+	ConfAll(*Window.WindowConfig, Users.User)
+
+	//Returns hero border interface for the futher using
+	GetHeroBorder()                           HeroBorder
+
+	//Returns cam border interface for the futher using
+	GetCamBorder()                            CamBorder
+
+	//Returns collisions interface for the futher using
+	GetCollisions()                           Collisions
+
+	//Returns map analizer interface for the futher using
+	GetAnailizer()                            Analizer
+
+	//Returns camera interface for the futher using
+	GetCam()                                  Cam
 }
 
 type MapC struct{
@@ -547,11 +790,11 @@ type MapC struct{
 }
 
 func (MC *MapC)Init(){
-	MC.HeroBorder = HeroBorder(new(HB))
-	MC.CamBorder = CamBorder(new(CB))
-	MC.Analizer = Analizer(new(Analises))
-	MC.Collisions = Collisions(new(C))
-	MC.Cam = Cam(new(CM))
+	MC.HeroBorder  = HeroBorder(new(HB))
+	MC.CamBorder   = CamBorder(new(CB))
+	MC.Analizer    = Analizer(new(Analises))
+	MC.Collisions  = Collisions(new(C))
+	MC.Cam         = Cam(new(CM))
 }
 
 func (MC *MapC)ConfHeroBorder(){
