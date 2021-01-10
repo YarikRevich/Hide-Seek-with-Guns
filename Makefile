@@ -14,16 +14,14 @@ ifeq ($(NAME), Linux)
 endif
 
 	@echo "\n --- if your os is Windows you are left without game ㋡ hahahhah --- \n"
-
 	@echo "\n --- Creates main folder for project and pulls a project in it --- \n"
-	@(cd ${GOPATH}/src && mkdir HideSeek
-	git init && git pull https://github.com/YarikRevich/Hide-Seek-with-Guns master)
-
+	@(cd ${GOPATH}/src && mkdir -p HideSeek)
+	@(cd ${GOPATH}/src/HideSeek && git init && git pull https://github.com/YarikRevich/Hide-Seek-with-Guns super-alpha)
 packages: standarts
 	@echo "\n --- Installs all the important packages for project ---\n"
-	@(go get github.com/galsondor/go-ascii
-	go get github.com/go-ping/ping
-	go get github.com/faiface/beep)
+	@(go get github.com/galsondor/go-ascii)
+	@(go get github.com/go-ping/ping)
+	@(go get github.com/faiface/beep)
 
 install: packages
 	@echo "\n --- Builds project --- \n"
