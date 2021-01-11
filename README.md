@@ -2,12 +2,19 @@
 
 !["preview"](preview.png)
 
+**_You can install game using insructions below_**
 
-**_You can install game using commands below_**
+Create a dir
+
+You should pull this repo to made dir
+```
+git init && git pull **this repo** master
+```
+
+And then ...
 
 ```
 make    #it works if you are in a dir with Makefile
-make install
 ```
 
 ---
@@ -17,19 +24,6 @@ make install
 
 
 To start playing 'Hide&Seek' you have to do some things
-
-
-Firstly create a dir for the game.
-```
-mkdir HideSeek
-```
-
-Afterwards you should pull this repo to made dir
-```
-git init && git pull **this repo** master
-```
-
-
 
 Firstly you have to install golang
 
@@ -42,10 +36,17 @@ Firstly you have to install golang
     brew install golang
     ```
 
-You should change the GOPATH var for the futher work
+You should add 'src' if it doesn't exist and dive into it
 
 ```
-export GOPATH=$(cd .. && pwd)
+cd $GOPATH && mkdir -p src  && cd src
+```
+
+Afterwards create a dir ...
+
+And then pull the repo
+```
+git init && git pull **this repo** master
 ```
 
 
