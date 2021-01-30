@@ -5,20 +5,44 @@ import (
 )
 
 type User struct{
-	X int
-	Y int
 	Conn net.Conn
-	Game *Game
-	Username string
-	LobbyID string
-	HeroPicture string
-	UpdationRun int
-	CurrentFrame int
-	CurrentFrameMatrix []string
+	Pos *Pos
+	GameInfo *GameInfo
+	PersonalInfo *PersonalInfo
+	Animation *Animation
+	Networking *Networking
+	Context    *Context
 }
 
-type Game struct{
-	GameStarted bool
-	ReadWriteUpdate chan string
+type Pos struct{
+	X int
+	Y int
 }
+
+type GameInfo struct{
+	Health       int
+	//WeaponRadius int
+}
+
+type PersonalInfo struct{
+	LobbyID string
+	Username string
+	HeroPicture string
+}
+
+type Animation struct{
+	UpdationRun int
+	CurrentFrame int
+	CurrentFrameMatrix []float64	
+}
+
+type Networking struct{
+	Index int
+}
+
+type Context struct{
+	Additional []string
+}
+
+
 

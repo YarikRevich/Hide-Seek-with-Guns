@@ -2,7 +2,6 @@ package Animation
 
 import (
 	"fmt"
-	"strconv"
 	"Game/Window"
 	"Game/Heroes/Users"
 	"github.com/faiface/pixel"
@@ -20,7 +19,7 @@ func getFrame(frameWidth float64, frameHeight float64, xGrid float64, yGrid int)
 
 func GetFrame(user *Users.User)pixel.Rect{
 	var frame pixel.Rect
-	switch user.CurrentFrame {
+	switch user.Animation.CurrentFrame {
 	case 1:
 		frame = getFrame(17, 50, .9, 0)
 	case 2:
@@ -32,15 +31,15 @@ func GetFrame(user *Users.User)pixel.Rect{
 	case 5:
 		frame = getFrame(17, 50, 6.6, 0)
 	}
-	if user.CurrentFrame == 5{
-		user.CurrentFrame = 0
+	if user.Animation.CurrentFrame == 5{
+		user.Animation.CurrentFrame = 0
 	}else{
-		user.CurrentFrame++
+		user.Animation.CurrentFrame++
 	}
 	return frame
 }
 
-func ConvertToStringList(R pixel.Rect)[]string{
+func convertRectToStrList(R pixel.Rect)[]string{
 	MinX := fmt.Sprintf("%f", R.Min.X)
 	MinY := fmt.Sprintf("%f", R.Min.Y)
 	MaxX := fmt.Sprintf("%f", R.Max.X)
@@ -48,6 +47,21 @@ func ConvertToStringList(R pixel.Rect)[]string{
 	return []string{
 		MinX, MinY, MaxX, MaxY,
 	}
+}
+
+func convertRectToIntList(R pixel.Rect)[]float64{
+	return []float64{
+		R.Min.X, R.Min.Y, R.Max.X, R.Max.Y,
+	}
+}
+
+func convertToStrList(intlist []float64)[]string{
+	var strlist []string
+	for _, i := range intlist{
+		num := fmt.Sprintf("%f", i)
+		strlist = append(strlist, num)
+	}
+	return strlist
 }
 
 func CompareEqualBeetwenSlices(a []string, b[]string)bool{
@@ -59,56 +73,56 @@ func CompareEqualBeetwenSlices(a []string, b[]string)bool{
 	return true
 }
 
-func ConvertStringSliceToRect(StringSlice []string)pixel.Rect{
-	MinX, err := strconv.ParseFloat(StringSlice[0], 64)
-	if err != nil{
-		panic(err)
-	}
-	MinY, err := strconv.ParseFloat(StringSlice[1], 64)
-	if err != nil{
-		panic(err)
-	}
-	MaxX, err := strconv.ParseFloat(StringSlice[2], 64)
-	if err != nil{
-		panic(err)
-	}
-	MaxY, err := strconv.ParseFloat(StringSlice[3], 64)
-	if err != nil{
-		panic(err)
-	}
+func convertStringSliceToRect(floatlist []float64)pixel.Rect{
+	// MinX, err := strconv.ParseFloat(StringSlice[0], 64)
+	// if err != nil{
+	// 	panic(err)
+	// }
+	// MinY, err := strconv.ParseFloat(StringSlice[1], 64)
+	// if err != nil{
+	// 	panic(err)
+	// }
+	// MaxX, err := strconv.ParseFloat(StringSlice[2], 64)
+	// if err != nil{
+	// 	panic(err)
+	// }
+	// MaxY, err := strconv.ParseFloat(StringSlice[3], 64)
+	// if err != nil{
+	// 	panic(err)
+	// }
 	return pixel.R(
-		MinX, MinY, MaxX, MaxY,
+		floatlist[0], floatlist[1], floatlist[2], floatlist[3],
 	)
 }
 
 func ChangeAnimation(user *Users.User, image *pixel.Sprite, win *pixelgl.Window){
-	user.UpdationRun++
-	if user.UpdationRun == 5{
-		user.UpdationRun = 0
-		user.CurrentFrameMatrix = ConvertToStringList(GetFrame(user))
-		if !CompareEqualBeetwenSlices(user.CurrentFrameMatrix, ConvertToStringList(pixel.R(0, 0, 0, 0))){
-			image.Set(image.Picture(), ConvertStringSliceToRect(user.CurrentFrameMatrix))
+	user.Animation.UpdationRun++
+	if user.Animation.UpdationRun == 5{
+		user.Animation.UpdationRun = 0
+		user.Animation.CurrentFrameMatrix = convertRectToIntList(GetFrame(user))
+		if !CompareEqualBeetwenSlices(convertToStrList(user.Animation.CurrentFrameMatrix), convertRectToStrList(pixel.R(0, 0, 0, 0))){
+			image.Set(image.Picture(), convertStringSliceToRect(user.Animation.CurrentFrameMatrix))
 			image.Draw(win, pixel.IM.Moved(pixel.V(
-				float64(user.X),
-				float64(user.Y),
+				float64(user.Pos.X),
+				float64(user.Pos.Y),
 			)))
 		}	
 	}
-	if !CompareEqualBeetwenSlices(user.CurrentFrameMatrix, ConvertToStringList(pixel.R(0, 0, 0, 0))){
-		image.Set(image.Picture(), ConvertStringSliceToRect(user.CurrentFrameMatrix))
+	if !CompareEqualBeetwenSlices(convertToStrList(user.Animation.CurrentFrameMatrix), convertRectToStrList(pixel.R(0, 0, 0, 0))){
+		image.Set(image.Picture(), convertStringSliceToRect(user.Animation.CurrentFrameMatrix))
 		image.Draw(win, pixel.IM.Moved(pixel.V(
-			float64(user.X),
-			float64(user.Y),
+			float64(user.Pos.X),
+			float64(user.Pos.Y),
 		)))
 	}else{
 		image.Set(image.Picture(), getFrame(17, 50, .9, 0))
 		image.Draw(win, pixel.IM.Moved(pixel.V(
-			float64(user.X),
-			float64(user.Y),
+			float64(user.Pos.X),
+			float64(user.Pos.Y),
 		)))
 	}
 }
 
 func MoveAndChangeAnim(userConfig *Users.User, winConf *Window.WindowConfig){
-	ChangeAnimation(userConfig, winConf.Components.AvailableHeroImages[userConfig.HeroPicture], winConf.Win)
+	ChangeAnimation(userConfig, winConf.Components.AvailableHeroImages[userConfig.PersonalInfo.HeroPicture], winConf.Win)
 }

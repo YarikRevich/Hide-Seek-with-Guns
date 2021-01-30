@@ -1,17 +1,16 @@
 package LobbyWaitRoom
 
 import (
-	"fmt"
-	"strings"
-	"Game/Utils"
-	"Game/Server"
-	"Game/Window"
-	"Game/Heroes/Users"
 	"Game/Components/Map"
 	"Game/Components/States"
+	"Game/Heroes/Users"
+	"Game/Server"	
+	"Game/Window"
+	"fmt"
+	
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
-	"Game/UI/GameProcess/ConfigParsers"
 )
 
 type LobbyWaitRoom struct{
@@ -36,6 +35,15 @@ func (l *LobbyWaitRoom)Init(winConf *Window.WindowConfig, currState *States.Stat
 	l.mapComponents = mapComponents
 }
 
+func GetUserFromList(u string, l []*Server.GameRequest)*Server.GameRequest{
+	for _, value := range l{
+		if value.PersonalInfo.Username == u{
+			return value
+		}
+	}
+	return nil
+}
+
 func (l *LobbyWaitRoom)ProcessNetworking(){
 	//It is a func for making network for getting
 	//the newest information about users in lobby.
@@ -44,32 +52,32 @@ func (l *LobbyWaitRoom)ProcessNetworking(){
 
 	if !l.currState.NetworkingStates.LobbyWaitRoom{
 		l.currState.NetworkingStates.LobbyWaitRoom = true
-		go func(){server := Server.Network(new(Server.N))
-			server.Init(fmt.Sprintf("GetUsersInfoLobby///%s", l.userConfig.LobbyID), l.userConfig.Conn, 1)
+		go func(){
+			parser := Server.GameParser(new(Server.GameRequest))
+			server := Server.Network(new(Server.N))
+			server.Init(nil, l.userConfig, 1, nil, parser.Parse, "GetUsersInfoPrepLobby")
 			server.Write()
-			response := server.Read()
-
-			ready := Utils.CheckLobbyIsReady(response)
-			if ready{
-				l.currState.MainStates.SetGame()
-			}else{
-				if !Utils.CheckErrorResp(response){
-					cleanedResp := Utils.CleanGottenResponse(response)
-					if !Utils.IsOkResp(cleanedResp){
-						unparsedUsers := ConfigParsers.UnparseUsers(cleanedResp)
-						for _, value := range unparsedUsers{
-							if len(l.winConf.WaitRoom.NewMembers) <= 3{
-								if len(l.winConf.WaitRoom.NewMembers) != 0{
-									if !strings.Contains(strings.Join(l.winConf.WaitRoom.NewMembers, " "), value){
-										l.winConf.WaitRoom.NewMembers = append(l.winConf.WaitRoom.NewMembers, value)
-									}
-								
-								}else{
-								 	l.winConf.WaitRoom.NewMembers = append(l.winConf.WaitRoom.NewMembers, value)
-								}
+			response := server.ReadGame(parser.Unparse)
+			responseUser :=  GetUserFromList(l.userConfig.PersonalInfo.Username, response)
+			
+			if responseUser != nil{
+				switch responseUser.Error{
+				case "60":
+					iswritten := func(u string)bool{
+						for _, us := range l.winConf.WaitRoom.NewMembers{
+							if u == us{
+								return true
 							}
 						}
+						return false
 					}
+					for _, user := range response{
+						if len(l.winConf.WaitRoom.NewMembers) <= 4 && !iswritten(user.PersonalInfo.Username){
+							l.winConf.WaitRoom.NewMembers = append(l.winConf.WaitRoom.NewMembers, user.PersonalInfo.Username)
+						}
+					}
+				case "502":
+					l.currState.MainStates.SetGame()
 				}
 			}
 			l.currState.NetworkingStates.LobbyWaitRoom = false
@@ -83,29 +91,28 @@ func (l *LobbyWaitRoom)ProcessKeyboard(){
 		l.winConf.DrawWaitRoomPressedButton()
 	}
 
-	if l.winConf.WindowUpdation.WaitRoomFrame % 6 == 0 && l.winConf.WindowUpdation.WaitRoomFrame != 0{
-
-		server := Server.Network(new(Server.N))
-		if (l.winConf.Win.MousePosition().X >= 361 && l.winConf.Win.MousePosition().X <= 596) && (l.winConf.Win.MousePosition().Y >= 73 && l.winConf.Win.MousePosition().Y <= 165) && l.winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-			if l.winConf.WaitRoom.RoomType == "create"{
-				server.Init(fmt.Sprintf("ClosePreparingLobby///%s~", l.userConfig.LobbyID), l.userConfig.Conn, 1)
-				server.Write()
-				server.Read()
-				l.currState.MainStates.SetGame()
-			}
+	server := Server.Network(new(Server.N))
+	if (l.winConf.Win.MousePosition().X >= 361 && l.winConf.Win.MousePosition().X <= 596) && (l.winConf.Win.MousePosition().Y >= 73 && l.winConf.Win.MousePosition().Y <= 165) && l.winConf.Win.JustPressed(pixelgl.MouseButtonLeft){
+		if l.winConf.WaitRoom.RoomType == "create"{
+			parser := Server.GameParser(new(Server.GameRequest))
+			server.Init(nil, l.userConfig, 1, nil, parser.Parse, "ClosePreparingLobby")
+			server.Write()
+			server.ReadGame(parser.Unparse)
+			l.currState.MainStates.SetGame()
 		}
-
-		if (l.winConf.Win.MousePosition().X >= 21 && l.winConf.Win.MousePosition().X <= 68) && (l.winConf.Win.MousePosition().Y >= 463 && l.winConf.Win.MousePosition().Y <= 507) && l.winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-			if l.winConf.WaitRoom.RoomType == "create"{
-				l.winConf.WaitRoom.NewMembers = []string{}
-		 		l.currState.MainStates.SetCreateLobbyMenu()
-		 		server.Init(fmt.Sprintf("DeleteLobby///%s", l.userConfig.LobbyID), l.userConfig.Conn, 1)
-		 		server.Write()
-		 		server.Read()
-			}else{
-				l.winConf.WaitRoom.NewMembers = []string{}
-		 		l.currState.MainStates.SetJoinLobbyMenu()
-			}
+	}
+	if (l.winConf.Win.MousePosition().X >= 21 && l.winConf.Win.MousePosition().X <= 68) && (l.winConf.Win.MousePosition().Y >= 463 && l.winConf.Win.MousePosition().Y <= 507) && l.winConf.Win.JustPressed(pixelgl.MouseButtonLeft){
+		if l.winConf.WaitRoom.RoomType == "create"{
+			l.winConf.WaitRoom.NewMembers = []string{}
+			l.currState.MainStates.SetCreateLobbyMenu()
+				 
+			parser := Server.GameParser(new(Server.GameRequest))
+			server.Init(nil, l.userConfig, 1, nil, parser.Parse, "DeleteLobby")
+			server.Write()
+	 		server.ReadGame(parser.Unparse)
+		}else{
+			l.winConf.WaitRoom.NewMembers = []string{}
+	 		l.currState.MainStates.SetJoinLobbyMenu()
 		}
 	}
 	l.winConf.WindowUpdation.WaitRoomFrame++
@@ -132,7 +139,7 @@ func (l *LobbyWaitRoom)DrawAnnouncements(){
 	l.winConf.TextAreas.NewMembersTextArea.Draw(l.winConf.Win, pixel.IM.Scaled(l.winConf.TextAreas.NewMembersTextArea.Orig, 2.5)) 
 
 	l.winConf.TextAreas.CurrentLobbyIDArea.Clear()
-	lobbyIdText := fmt.Sprintf("Lobby ID is: %s", l.userConfig.LobbyID)
+	lobbyIdText := fmt.Sprintf("Lobby ID is: %s", l.userConfig.PersonalInfo.LobbyID)
 	l.winConf.TextAreas.CurrentLobbyIDArea.Write([]byte(lobbyIdText))
 	l.winConf.TextAreas.CurrentLobbyIDArea.Draw(l.winConf.Win, pixel.IM.Scaled(l.winConf.TextAreas.CurrentLobbyIDArea.Orig, 2.5))
 

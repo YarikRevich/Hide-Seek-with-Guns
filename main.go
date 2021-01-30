@@ -1,22 +1,22 @@
 package main
 
 import (
-	"fmt"
-	"time"
-	"Game/UI"
-	"Game/Utils"
-	"Game/Window"
-	"Game/Server"
-	"Game/Utils/Log"
-	"Game/Heroes/Users"
-	"Game/UI/StartMenu"
 	"Game/Components/Map"
+	"Game/Components/Start"
+	"Game/Components/States"
+	"Game/Heroes/Users"
+	"Game/Server"
+	"Game/UI"
+	"Game/UI/CreationLobbyMenu"
 	"Game/UI/GameProcess"
 	"Game/UI/JoinLobbyMenu"
 	"Game/UI/LobbyWaitRoom"
-	"Game/Components/Start"
-	"Game/Components/States"
-	"Game/UI/CreationLobbyMenu"
+	"Game/UI/StartMenu"
+	"Game/Utils"
+	"Game/Utils/Log"
+	"Game/Window"
+	"fmt"
+	"time"
 
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/gookit/color"
@@ -27,18 +27,18 @@ var (
 	second = time.Tick(time.Second)
 )
 
-func choseActionGate(winConf *Window.WindowConfig, currState *States.States, userConfig *Users.User, mapComponents Map.MapConf){
+func choseActionGate(winConf *Window.WindowConfig, currState *States.States, userConfig *Users.User, mapComponents Map.MapConf) {
 	/* It is a main action gate which choses an
 	   important menu to act and to draw. It can
 	   chose such menues as:
-	   - StartMenu 
+	   - StartMenu
 	   - CreateLobbyMenu
 	   - JoinLobbyMenu
 	   - WaitRoom
 	   - Game
 	*/
 
-	switch{
+	switch {
 	case currState.MainStates.StartMenu:
 		stage := UI.Stage(new(StartMenu.StartMenu))
 		stage.Init(winConf, currState, userConfig, mapComponents)
@@ -62,11 +62,11 @@ func choseActionGate(winConf *Window.WindowConfig, currState *States.States, use
 	}
 }
 
-func run(){
+func run() {
 	/* It is a main game starting func.
-	   Firstly, it creates window with all the 
+	   Firstly, it creates window with all the
 	   settings, then, draws starting background image,
-	   and loads all the background images for all the 
+	   and loads all the background images for all the
 	   menues. Due to put information configurates user
 	   struction. Sets state-machine at the first state.
 	   Runs 'choseActionGate' which choses important menu
@@ -94,20 +94,26 @@ func run(){
 
 	//Configures user's info
 	userConfig := Users.User{
-		Username:           username,
-		Conn:               conn,
-		X:                  int(randomSpawn.X),
-		Y:                  int(randomSpawn.Y),
-		Game:               &Users.Game{ReadWriteUpdate: make(chan string)},
-		HeroPicture:        Utils.GetRandomHeroImage(winConf.Components.AvailableHeroImages),
-		CurrentFrameMatrix: []string{"0", "0", "0", "0"},
+		Conn: conn,
+		Pos: &Users.Pos{
+			X: int(randomSpawn.X),
+			Y: int(randomSpawn.Y),
+		},
+		GameInfo: &Users.GameInfo{Health: 10},
+		PersonalInfo: &Users.PersonalInfo{
+			Username:    username,
+			HeroPicture: Utils.GetRandomHeroImage(winConf.Components.AvailableHeroImages),
+		},
+		Animation:  &Users.Animation{CurrentFrameMatrix: []float64{0, 0, 0, 0}},
+		Networking: new(Users.Networking),
+		Context:    new(Users.Context),
 	}
 
 	//Sets current state at 'StartMenu'
 	currState := States.States{
 		MainStates:       new(States.MainStates),
 		MusicStates:      new(States.MusicStates),
-		SendStates:       new(States.SendStates), 
+		SendStates:       new(States.SendStates),
 		NetworkingStates: new(States.NetworkingStates),
 	}
 	currState.MainStates.SetStartMenu()
@@ -126,14 +132,15 @@ func run(){
 	//Starts pinger
 	go log.GetPing()
 
-	for !winConf.Win.Closed(){
+	for !winConf.Win.Closed() {
 
+		//fmt.Println(currState.MainStates)
 		//Shows statistics about user if argument is placed
 		log.Show()
-	
+
 		frames++
-		select{
-		case <- second:
+		select {
+		case <-second:
 			//Sets title of the window with frame rate
 			winConf.Win.SetTitle(fmt.Sprintf("Hide and seek| %d", frames))
 			frames = 0
@@ -143,13 +150,13 @@ func run(){
 
 			//Goes to the action gate to chose an important one
 			choseActionGate(&winConf, &currState, &userConfig, mapComponents)
-			
+
 			winConf.Win.Update()
 		}
 	}
 	color.Green.Println("Goodbye!")
 }
 
-func main(){
+func main() {
 	pixelgl.Run(run)
 }

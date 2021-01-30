@@ -1,13 +1,12 @@
 package Map
 
 import (
-	"math"
-	"Game/Window"
 	"Game/Heroes/Users"
+	"Game/Window"
+	"math"
+
 	"github.com/faiface/pixel"
 )
-
-
 
 //!!! IT IS A PART OF HERO BORDERS' OPTIONS !!!
 
@@ -318,68 +317,84 @@ func (c DC) DrawDoors(drawHor func(pixel.Vec), drawVer func(pixel.Vec)) {
 //Main configurator for hero icon collisions ...
 
 type HeroCollisions interface{
-	IsHero(pixel.Vec, []*Users.User, UtilCollisions) heroPosControllers
+	IsHero(pixel.Vec, []*Users.User) heroPosControllers
 }
 
 type HC struct{}
 
 
 type heroPosControllers interface{
-	Top()    bool
-	Bottom() bool
-	Left()   bool
-	Right()  bool
+	Top(float64, float64)    (bool, string)
+	Bottom(float64, float64) (bool, string)
+	Left(float64, float64)   (bool, string)
+	Right(float64, float64)  (bool, string)
+	Near(float64, float64)   (bool, string)
 }
 
 type hP struct{
 	vector        pixel.Vec
 	othervectors []*Users.User
-	util          UtilCollisions
 }
 
-func (h *hP) Top()bool{
+func (h *hP) Top(x, y float64)(bool, string){
 	for _, value := range h.othervectors{
-		if math.Abs(float64(value.X)-h.vector.X) <= 10 && math.Abs(float64(value.Y)-h.vector.Y) <= 17{
-			return true
+		if math.Abs(float64(value.Pos.X)-h.vector.X) <= x && math.Abs(float64(value.Pos.Y)-h.vector.Y) <= y{
+			return true, value.PersonalInfo.Username
 		}
 	}
-	return false
+	return false, ""
 }
 
-func (h *hP) Bottom()bool{
+func (h *hP) Bottom(x, y float64)(bool, string){
 	for _, value := range h.othervectors{
-		if math.Abs(float64(value.X)-h.vector.X) <= 10 && math.Abs(float64(value.Y)-h.vector.Y) <= 17{
-			return true
+		if math.Abs(float64(value.Pos.X)-h.vector.X) <= x && math.Abs(float64(value.Pos.Y)-h.vector.Y) <= y{
+			return true, value.PersonalInfo.Username
 		}
 	}
-	return false
+	return false, ""
 }
 
-func (h *hP) Left()bool{
+func (h *hP) Left(x, y float64)(bool, string){
 	for _, value := range h.othervectors{
-		if math.Abs(float64(value.X)-h.vector.X) <= 10 && math.Abs(float64(value.Y)-h.vector.Y) <= 17{
-			return true
+		if math.Abs(float64(value.Pos.X)-h.vector.X) <= x && math.Abs(float64(value.Pos.Y)-h.vector.Y) <= y{
+			return true, value.PersonalInfo.Username
 		}
 	}
-	return false
+	return false, ""
 }
 
-func (h *hP) Right()bool{
+func (h *hP) Right(x, y float64)(bool, string){
 	for _, value := range h.othervectors{
-		if math.Abs(float64(value.X)-h.vector.X) <= 10 && math.Abs(float64(value.Y)-h.vector.Y) <= 17{
-			return true
+		if math.Abs(float64(value.Pos.X)-h.vector.X) <= x && math.Abs(float64(value.Pos.Y)-h.vector.Y) <= y{
+			return true, value.PersonalInfo.Username
 		}
 	}
-	return false
+	return false, ""
+}
+
+func (h *hP) Near(x, y float64)(bool, string){
+
+	if ok, user := h.Top(x, y); ok{
+		return ok, user
+	}
+	if ok, user := h.Bottom(x, y); ok{
+		return ok, user
+	}
+	if ok, user := h.Left(x, y); ok{
+		return ok, user
+	}
+	if ok, user := h.Right(x, y); ok{
+		return ok, user
+	}
+	return false, ""
 }
 
 
-func (h *HC) IsHero(vector pixel.Vec, othervectors []*Users.User, util UtilCollisions) heroPosControllers{
+func (h *HC) IsHero(vector pixel.Vec, othervectors []*Users.User) heroPosControllers{
 
 	return heroPosControllers(&hP{
 		vector:  vector,
 		othervectors: othervectors,
-		util: util,
 	})
 }
 
@@ -416,19 +431,24 @@ func (c *C) Init() {
 func (c *C) IsCritical(vector pixel.Vec, otherusers []*Users.User, types string)bool{
 	//Checks whether each of beneath probable issues are existing
 	//If though only one does it returns true ...
+
 	
 	if c.GetMapCollisions().IsColumn(vector, c.GetUtilCollisions()){
 		return true
 	}
 	switch types{
 	case "top": 
-		return c.GetHeroCollisions().IsHero(vector, otherusers, c.GetUtilCollisions()).Top()
+		ok, _ := c.GetHeroCollisions().IsHero(vector, otherusers).Top(10, 17)
+		return ok
 	case "bottom":
-		return c.GetHeroCollisions().IsHero(vector, otherusers, c.GetUtilCollisions()).Bottom()
+		ok, _ := c.GetHeroCollisions().IsHero(vector, otherusers).Bottom(10, 17)
+		return ok
 	case "left":
-		return c.GetHeroCollisions().IsHero(vector, otherusers, c.GetUtilCollisions()).Left()
+		ok, _ := c.GetHeroCollisions().IsHero(vector, otherusers).Left(10, 17)
+		return ok
 	case "right":
-		return c.GetHeroCollisions().IsHero(vector, otherusers, c.GetUtilCollisions()).Right()
+		ok, _ := c.GetHeroCollisions().IsHero(vector, otherusers).Right(10, 17)
+		return ok
 	}
 	return false
 }
@@ -628,6 +648,9 @@ type Cam interface{
 	//Sets collibration and cam position
 	SetCam()
 
+	//Sets the default position of cam
+	SetDefaultCam()
+
 	//Sets camera to window matrix scaling it before
 	UpdateCam()
 }
@@ -653,7 +676,7 @@ func (c *CM)collibrateBottom()float64{
 	//Collibrates camera due to bottom position
 
 	bottom := c.borders.Bottom()
-	Y := c.userconfig.Y
+	Y := c.userconfig.Pos.Y
 	for{
 		if float64(Y) >= bottom{
 			return float64(Y)
@@ -666,7 +689,7 @@ func (c *CM)collibrateTop()float64{
 	//Collibrates camera due to top position
 
 	top := c.borders.Top()
-	Y := c.userconfig.Y
+	Y := c.userconfig.Pos.Y
 	for{
 		if float64(Y) <= top{
 			return float64(Y)
@@ -679,7 +702,7 @@ func (c *CM)collibrateLeft()float64{
 	//Collibrates camera due to left position
 
 	left := c.borders.Left()
-	X := c.userconfig.X
+	X := c.userconfig.Pos.X
 	for{
 		if float64(X) >= left{
 			return float64(X)
@@ -692,7 +715,7 @@ func (c *CM)collibrateRight()float64{
 	//Collibrates camera due to	right position
 
 	right := c.borders.Right()
-	X := c.userconfig.X
+	X := c.userconfig.Pos.X
 	for{
 		if float64(X) <= right{
 			return float64(X)
@@ -708,12 +731,12 @@ func (c *CM)collibrate()pixel.Vec{
 	var Y float64
 	Y = c.collibrateBottom()
 	NewY := c.collibrateTop()
-	if NewY != float64(c.userconfig.Y){
+	if NewY != float64(c.userconfig.Pos.Y){
 		Y = NewY
 	}
 	X = c.collibrateLeft()
 	NewX := c.collibrateRight()
-	if NewX != float64(c.userconfig.X){
+	if NewX != float64(c.userconfig.Pos.X){
 		X = NewX
 	}
 	return pixel.V(X, Y)
@@ -727,6 +750,14 @@ func (c *CM)SetCam(){
 	c.winconf.Cam.CamPos = pixel.V(coords.X, coords.Y)
 	c.winconf.Cam.CamZoom = 1.0
 }
+
+func (c *CM)SetDefaultCam(){
+	//Sets cam to the default position irrespective of user's one
+
+	cam := pixel.IM.Moved(c.winconf.Win.Bounds().Center().Sub(c.winconf.BGImages.StartMenuBG.Picture().Bounds().Center()))
+	c.winconf.Win.SetMatrix(cam)
+}
+
 
 func (c *CM)UpdateCam(){
 	//Sets camera as matrix scaling it

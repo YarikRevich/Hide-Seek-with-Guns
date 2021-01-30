@@ -1,13 +1,17 @@
 package Start
 
 import (
-	"os"
-	"fmt"
-	"net"
-	"time"
+	_ "encoding/json"
 	"errors"
+	"fmt"
+	_ "log"
+	"net"
+	"os"
 	"strconv"
 	"strings"
+	"time"
+	"Game/Server"
+
 	"github.com/gookit/color"
 )
 
@@ -18,21 +22,24 @@ func getMainServer()string{
 	}
 	buff := make([]byte, 4096)
 	file.Read(buff)
-	var cleanedBuff []byte
+
+	var cleaned []byte
+
 	for _, value := range buff{
-		if value == 0{
-			continue
+		if value != 0{
+			cleaned = append(cleaned, value)
 		}
-		cleanedBuff = append(cleanedBuff, value)
 	}
-	if len(cleanedBuff) == 0{
+
+	if len(cleaned) == 0{
 		fmt.Println("Config file is empty! Please write your own main server adress or copy it from the repo!")
 		os.Exit(0)
 	}
-	return string(cleanedBuff)
+	return string(cleaned)
 }
 
 func connectToMainServer(adress string)*net.UDPConn{
+
 	splittedAdress := strings.Split(strings.Replace(adress, "\n", "", 1), ":")
 	ip, portStr := splittedAdress[0], splittedAdress[1]
 	port, err := strconv.Atoi(portStr)
@@ -43,36 +50,36 @@ func connectToMainServer(adress string)*net.UDPConn{
 		Port: port,
 		IP: net.ParseIP(ip),
 	}
-	conn, err := net.DialUDP("udp", nil, &udpaddr)
+	resolvedadd, err := net.ResolveUDPAddr("udp", udpaddr.String())
+
+	conn, err := net.DialUDP("udp", nil, resolvedadd)
 	if err != nil{
 		color.Red.Println("There is no connection for the internet")
 		os.Exit(0)
 	}
-	conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
-	conn.SetWriteDeadline(time.Now().Add(1000 * time.Millisecond))
+	conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+	conn.SetWriteDeadline(time.Now().Add(100 * time.Millisecond))
 	return conn
 }
 
 func getAvailableServers(conn *net.UDPConn)map[int]string{
-	conn.Write([]byte("CheckServers"))
-	buff := make([]byte, 4096)
-	conn.Read(buff)
-	conn.Close()
-	var cleanedBuff []byte
-	for _, value := range buff{
-		if value == 0{
-			continue
-		}
-		cleanedBuff = append(cleanedBuff, value)
-	}
-	result := map[int]string{}
-	for index, value := range strings.SplitAfter(string(cleanedBuff), " "){
+	defer conn.Close()
+	parser := Server.StartParser(new(Server.StartRequest))
+	
+	server := Server.Network(new(Server.N))
+	server.Init(conn, nil, 1, parser.Parse, nil, "CheckServers")
+	server.Write()
+
+	data := server.ReadStart(parser.Unparse)
+	result := make(map[int]string)
+	for index, value := range data[0].Body{
 		result[index+1] = value
 	}
 	return result
 }
 
 func formatAvailableServersList(availableservers map[int]string)error{
+
 	value, _ := availableservers[1]
 	if len(availableservers) == 1 && len(value) == 0{
 		color.Red.Println("There are no available servers right now!")

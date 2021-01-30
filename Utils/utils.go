@@ -2,14 +2,15 @@ package Utils
 
 import (
 	"fmt"
-	"time"
-	"math/rand"
 	"image"
+	_ "image/png"
+	"math/rand"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
+
 	"github.com/faiface/pixel"
-	_ "image/png"
 )
 
 func MessageIsEmpty(message []byte)bool{
@@ -138,4 +139,23 @@ func GetRandomSpawn()pixel.Vec{
 
 func RemoveIndex(s []string, index int)[]string{
 	return append(s[:index], s[index+1:]...)
+}
+
+func Any(b []byte)bool{
+	for _, value := range b{
+		if value != 0 && value != 91 && value != 93{
+			return true
+		}
+	}
+	return false
+}
+
+func Clean(b []byte)[]byte{
+	var cl []byte
+	for _, value := range b{
+		if value != 0{
+			cl = append(cl, value)
+		}
+	}
+	return cl
 }

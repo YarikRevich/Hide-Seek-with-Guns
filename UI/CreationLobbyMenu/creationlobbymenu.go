@@ -2,6 +2,7 @@ package CreationLobbyMenu
 
 import (
 	"fmt"
+	_ "reflect"
 	"strings"
 	"Game/Utils"
 	"Game/Window"
@@ -38,54 +39,39 @@ func (c *CreationLobbyMenu)Init(winConf *Window.WindowConfig, currState *States.
 func (c *CreationLobbyMenu)ProcessNetworking(){
 
 	if c.currState.SendStates.CreateRoom{
+
+		c.userConfig.PersonalInfo.LobbyID = strings.Join(c.winConf.TextAreas.CreateLobbyInput.WrittenText, "")
+
+		parser := Server.GameParser(new(Server.GameRequest))
 		server := Server.Network(new(Server.N))
-
-		writtenID := strings.Join(c.winConf.TextAreas.CreateLobbyInput.WrittenText, "")
-		c.userConfig.LobbyID = writtenID
-		server.Init(fmt.Sprintf("CreateLobby///%s", writtenID), c.userConfig.Conn, 1)
+		server.Init(nil, c.userConfig, 1, nil, parser.Parse, "CreateLobby")
 		server.Write()
-		server.Read()
+		server.ReadGame(parser.Unparse)
 
-		server.Init(
-			fmt.Sprintf(
-				"AddToLobby///%s~/%s/%d/%d/%d/%d/0|0|0|0/%s", 
-				writtenID,
-				c.userConfig.Username,
-				c.userConfig.X,
-				c.userConfig.Y,
-				c.userConfig.UpdationRun,
-				c.userConfig.CurrentFrame,
-				c.userConfig.HeroPicture,
-			), 
-			c.userConfig.Conn,
-			1,
-		)
+		server.Init(nil, c.userConfig, 1, nil, parser.Parse, "AddToLobby")
 		server.Write()
-		response := server.Read()
-
-		if !Utils.MessageIsEmpty(response){
-			c.currState.MainStates.SetWaitRoom()
-			c.currState.SendStates.CreateRoom = false
-			c.winConf.WaitRoom.RoomType = "create"
-			c.winConf.TextAreas.CreateLobbyInput.WrittenText = []string{}
+		response := server.ReadGame(parser.Unparse)
+		if response[0].Error == "20"{
+		 	c.currState.MainStates.SetWaitRoom()
+		  	c.currState.SendStates.CreateRoom = false
+		  	c.winConf.WaitRoom.RoomType = "create"
+		  	c.winConf.TextAreas.CreateLobbyInput.WrittenText = []string{}
 		}
 	}
 }
 
 func (c *CreationLobbyMenu)ProcessKeyboard(){
 
-	if c.winConf.WindowUpdation.CreationMenuFrame % 5 == 0 && c.winConf.WindowUpdation.CreationMenuFrame != 0{
-		if (c.winConf.Win.MousePosition().X >= 21 && c.winConf.Win.MousePosition().X <= 68) && (c.winConf.Win.MousePosition().Y >= 468 && c.winConf.Win.MousePosition().Y <= 511) && c.winConf.Win.Pressed(pixelgl.MouseButtonLeft){
-			c.winConf.TextAreas.CreateLobbyInput.WrittenText = []string{}
-			c.currState.MainStates.SetStartMenu()
-		}
+	if (c.winConf.Win.MousePosition().X >= 21 && c.winConf.Win.MousePosition().X <= 68) && (c.winConf.Win.MousePosition().Y >= 468 && c.winConf.Win.MousePosition().Y <= 511) && c.winConf.Win.JustPressed(pixelgl.MouseButtonLeft){
+		c.winConf.TextAreas.CreateLobbyInput.WrittenText = []string{}
+		c.currState.MainStates.SetStartMenu()
 	}
 
 	if (c.winConf.Win.MousePosition().X >= 342 && c.winConf.Win.MousePosition().X <= 612) && (c.winConf.Win.MousePosition().Y >= 75 && c.winConf.Win.MousePosition().Y <= 172){
 		c.winConf.DrawCreationLobbyMenuBGPressedButton()
 	}
 
-	if (c.winConf.Win.MousePosition().X >= 342 && c.winConf.Win.MousePosition().X <= 612) && (c.winConf.Win.MousePosition().Y >= 75 && c.winConf.Win.MousePosition().Y <= 172) && c.winConf.Win.Pressed(pixelgl.MouseButtonLeft){
+	if (c.winConf.Win.MousePosition().X >= 342 && c.winConf.Win.MousePosition().X <= 612) && (c.winConf.Win.MousePosition().Y >= 75 && c.winConf.Win.MousePosition().Y <= 172) && c.winConf.Win.JustPressed(pixelgl.MouseButtonLeft){
 		c.currState.SendStates.CreateRoom = true
 	}
 }

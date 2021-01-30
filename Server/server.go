@@ -1,18 +1,16 @@
 package Server
 
 import (
-	"fmt"
+	"Game/Heroes/Users"
+	"Game/Utils"
 	"net"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 )
 
 const(
 	//Containes the delay for read and write timeouts
-
-	delay = 12000 * time.Microsecond
+	delay = 500 * time.Millisecond
 )
 
 var(
@@ -36,9 +34,14 @@ func GetConnection(adress string) net.Conn {
 	if err != nil {
 		panic(err)
 	}
-	conn.SetReadDeadline(time.Now().Add(delay))
-	conn.SetWriteDeadline(time.Now().Add(delay))
-	conn.Write([]byte("!_"))
+	// err = conn.SetReadDeadline(time.Now().Add(delay))
+	// if err != nil{
+	// 	log.Fatalln(err)
+	// }
+	// err = conn.SetWriteDeadline(time.Now().Add(delay))
+	// if err != nil{
+	// 	log.Fatalln(err)
+	// }
 	return conn
 }
 
@@ -46,7 +49,7 @@ type Network interface {
 	//Special interface for networking along the game
 
 	//Inits the important response and the connector to send the request through
-	Init(request string, conn net.Conn, r int)
+	Init(c net.Conn, u *Users.User, r int, sreq func([]*StartRequest)[]byte, greq func([]*GameRequest)[]byte, t string)
 
 	//Writes given response
 	Write()
@@ -54,17 +57,11 @@ type Network interface {
 	//Reads upcoming bytes
 	Read() []byte
 
-	//Checks whether the request is old
-	IsOld(buff []byte) bool
-
-	//Formats response
-	Format(request string)
-
-	//Informats response
-	Unformat(response string) int
-
-	//Formats to work with
-	FormatToWorkWith(buff []byte)[]byte
+	//Reads bytes being parsed via start request parser
+	ReadStart(func([]byte)[]*StartRequest)[]*StartRequest
+	
+	//Reads bytes being parsed via game request parser
+	ReadGame(func([]byte)([]*GameRequest, error))[]*GameRequest
 
 	//Sets such called speed limit of checking
 	SetRegime(r int)
@@ -73,11 +70,11 @@ type Network interface {
 type N struct {
 	//Struct for networking
 
-	//Response saves the response as it is not banal :)
-	request  string
+	conn net.Conn
 
 	//Saves the connection to send the response through
-	conn     net.Conn
+	userconfig *Users.User     
+
 
 	//Contains all the important settings fro two regimes
 	//of work for networking. Firstly it takes tryLimits
@@ -87,6 +84,13 @@ type N struct {
 	//checks all the indexes of responses not passing
 	//old responses returning only the newest ones
 	regime	 NC
+
+	//Contains a type of read and write. To chose it you
+	//have to place int or a constant
+	startreq func([]*StartRequest)[]byte
+	gamereq func([]*GameRequest)[]byte
+
+	typ string
 }
 
 type NC struct{
@@ -94,6 +98,8 @@ type NC struct{
 
 	//Contains limits for response failuer
 	tryLimit int
+
+	tries int
 
 	//Sets whether the 'old-message indexing' is important
 	checkOld bool
@@ -109,22 +115,45 @@ func (n *N) SetRegime(r int){
 	case 1:
 		n.regime = NC{tryLimit: 4, checkOld: true}
 	}
-}
+} 
 
-func (n *N) Init(request string, conn net.Conn, r int) {
+func (n *N) Init(c net.Conn, u *Users.User, r int, sreq func([]*StartRequest)[]byte, greq func([]*GameRequest)[]byte, t string) {
 	//Inits the reponse and connection
 
 	n.SetRegime(r)
-	n.Format(request)
-	n.conn = conn
+	n.userconfig = u
+	n.conn = c
+	n.startreq = sreq
+	n.gamereq = greq
+	n.typ = t
 }
 
 func (n *N) Write() {
 	//Writes the response placing deadline before
 
 	for {
-		n.conn.SetWriteDeadline(time.Now().Add(delay))
-		num, err := n.conn.Write([]byte(n.request))
+		currindex++
+		var request []byte
+		switch{
+		case n.startreq != nil:
+			req := NewStartRequest(n.typ)
+			req[0].Index = currindex
+			request = n.startreq(req)
+		case n.gamereq != nil:
+			n.userconfig.Networking.Index = currindex
+			req := NewGameRequest(n.typ, n.userconfig)
+			request = n.gamereq(req)
+		}
+		var num int
+		var err error
+		switch{
+		case n.conn != nil:
+			n.conn.SetWriteDeadline(time.Now().Add(delay))
+			num, err = n.conn.Write(request)
+		case n.userconfig != nil:
+			n.userconfig.Conn.SetWriteDeadline(time.Now().Add(delay))
+			num, err = n.userconfig.Conn.Write(request)
+		}
 		if !((err != nil && num == 0) || num == 0) {
 			break
 		}
@@ -136,55 +165,44 @@ func (n *N) Read() []byte {
 
 	buff := make([]byte, 30000)
 	for {
-		n.conn.SetReadDeadline(time.Now().Add(delay))
-		num, err := n.conn.Read(buff)
+		var num int
+		var err error
+		switch{
+		case n.conn != nil:
+			n.conn.SetReadDeadline(time.Now().Add(delay))
+			num, err = n.conn.Read(buff)
+		case n.userconfig != nil:
+			n.userconfig.Conn.SetReadDeadline(time.Now().Add(delay))
+			num, err = n.userconfig.Conn.Read(buff)
+		}
 		if !((err != nil && num == 0) || num == 0){
-			if !n.IsOld(buff) && n.regime.checkOld{
-				return n.FormatToWorkWith(buff)
-			}
-			return n.FormatToWorkWith(buff)
-
+			return buff
 		}
-		if os.IsTimeout(err){
+		if os.IsTimeout(err) && n.regime.tries == n.regime.tryLimit{
 			n.Write()
+			n.regime.tries = 0
+		}else{
+			n.regime.tries++
 		}
 	}
 }
 
-func (n N) FormatToWorkWith(buff []byte)[]byte{
-	var cleaned []byte
-	for _, value := range buff{
-		if value != 0{
-			cleaned = append(cleaned, value)
-		}
+func(n *N) ReadStart(parser func([]byte)[]*StartRequest)[]*StartRequest{
+	buff := n.Read()
+	cl := Utils.Clean(buff)
+	unformatted := parser(cl)
+	if unformatted[0].Index == currindex && n.regime.checkOld{
+		return unformatted
 	}
-	splitted := strings.Split(string(buff), "_")
-	if len(splitted) == 1{
-		return []byte(splitted[0])
-	}
- 	return []byte(splitted[1])
+	return unformatted
 }
 
-func (n *N) IsOld(buff []byte)bool{
-	//Checks whether response is old
-
-	num := n.Unformat(string(buff))
-	if num != currindex{
-		return true
+func(n *N) ReadGame(parser func([]byte)([]*GameRequest, error))[]*GameRequest{
+	buff := n.Read()
+	cl := Utils.Clean(buff)
+	uf, _ := parser(cl)
+	if uf[0].Networking.Index == currindex && n.regime.checkOld{
+		return uf
 	}
-	return false
-}
-
-func (n *N)Unformat(response string)int{
-	reqnum := strings.Split(response, "_")
-	num, err := strconv.Atoi(reqnum[0])
-	if err != nil{
-		panic(err)
-	}
-	return num
-}
-
-func (n *N) Format(request string){
-	currindex++
-	n.request = fmt.Sprintf("%d_%s", currindex, request)
+	return uf
 }
