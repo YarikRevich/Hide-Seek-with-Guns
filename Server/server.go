@@ -34,14 +34,6 @@ func GetConnection(adress string) net.Conn {
 	if err != nil {
 		panic(err)
 	}
-	// err = conn.SetReadDeadline(time.Now().Add(delay))
-	// if err != nil{
-	// 	log.Fatalln(err)
-	// }
-	// err = conn.SetWriteDeadline(time.Now().Add(delay))
-	// if err != nil{
-	// 	log.Fatalln(err)
-	// }
 	return conn
 }
 

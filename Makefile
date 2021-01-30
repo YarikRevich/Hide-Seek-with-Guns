@@ -39,6 +39,7 @@ endif
 	go get github.com/galsondor/go-ascii;\
 	go get github.com/go-ping/ping;\
 	go get github.com/faiface/beep;\
+	go get github.com/gookit/color;\
 	clear > $(shell tty);\
 	printf "\n --- Builds project --- \n";\
 	go build main.go > /dev/null
