@@ -86,6 +86,7 @@ func run() {
 	winConf.LoadAllTextAreas()
 	winConf.LoadAvailableHeroImages()
 	winConf.LoadAvailableWeaponImages()
+	winConf.LoadAvailableWeaponIconImages()
 
 	//Draws background image to start game
 	winConf.DrawBackgroundImage()

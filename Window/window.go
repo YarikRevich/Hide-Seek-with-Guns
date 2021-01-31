@@ -30,7 +30,6 @@ type MenuImages struct {
 	StartMenuPressedJoinButton       *pixel.Sprite
 	HPHeart                          *pixel.Sprite
 	ElementsPanel                    *pixel.Sprite
-	DefaultSword                     *pixel.Sprite
 }
 
 type TextAreas struct {
@@ -81,6 +80,7 @@ type GameProcess struct {
 type Components struct {
 	AvailableHeroImages map[string]*pixel.Sprite
 	AvailableWeaponImages map[string]*pixel.Sprite
+	AvailableWeaponIconImages map[string]*pixel.Sprite
 	AvPlacesForSpaws    []pixel.Vec
 }
 
@@ -153,6 +153,10 @@ func (winConf *WindowConfig) LoadAvailableWeaponImages(){
 	winConf.Components.AvailableWeaponImages = Utils.GetAvailableWeaponImages()
 }
 
+func (winConf *WindowConfig) LoadAvailableWeaponIconImages(){
+	winConf.Components.AvailableWeaponIconImages = Utils.GetAvailableWeaponIconImages()
+}
+
 func (winConf *WindowConfig) DrawErrorText() {
 	if winConf.WindowError.LobbyDoesNotExist {
 		end := time.Now()
@@ -182,7 +186,7 @@ func (winConf *WindowConfig) LoadAllTextAreas() {
 func (winConf *WindowConfig) DrawBackgroundImage() {
 	//Draws background image
 
-	image, err := Utils.LoadImage("SysImages/StartMenu.png")
+	image, err := Utils.LoadImage("SysImages/Menues/StartMenu.png")
 	if err != nil {
 		panic(err)
 	}
@@ -191,7 +195,7 @@ func (winConf *WindowConfig) DrawBackgroundImage() {
 }
 
 func (winConf *WindowConfig) LoadCreationLobbyMenuBG() {
-	image, err := Utils.LoadImage("SysImages/CreateLobbyImage.png")
+	image, err := Utils.LoadImage("SysImages/Menues/CreateLobbyImage.png")
 	if err != nil {
 		panic(err)
 	}
@@ -204,7 +208,7 @@ func (winConf *WindowConfig) DrawCreationLobbyMenuBG() {
 }
 
 func (winConf *WindowConfig) LoadWaitRoomMenuBG() {
-	image, err := Utils.LoadImage("SysImages/WaitRoom.png")
+	image, err := Utils.LoadImage("SysImages/Menues/WaitRoom.png")
 	if err != nil {
 		panic(err)
 	}
@@ -217,7 +221,7 @@ func (winConf *WindowConfig) DrawWaitRoomMenuBG() {
 }
 
 func (winConf *WindowConfig) LoadJoinLobbyMenu() {
-	image, err := Utils.LoadImage("SysImages/JoinLobbyMenu.png")
+	image, err := Utils.LoadImage("SysImages/Menues/JoinLobbyMenu.png")
 	if err != nil {
 		panic(err)
 	}
@@ -230,7 +234,7 @@ func (winConf *WindowConfig) DrawJoinLobbyMenuBG() {
 }
 
 func (winConf *WindowConfig) LoadWaitRoomJoinBG() {
-	image, err := Utils.LoadImage("SysImages/WaitRoomJoin.png")
+	image, err := Utils.LoadImage("SysImages/Menues/WaitRoomJoin.png")
 	if err != nil {
 		panic(err)
 	}
@@ -243,7 +247,7 @@ func (winConf *WindowConfig) DrawWaitRoomJoinBG() {
 }
 
 func (winConf *WindowConfig) LoadGameBackground() {
-	image, err := Utils.LoadImage("SysImages/Game.png")
+	image, err := Utils.LoadImage("SysImages/GameProcess/Game.png")
 	if err != nil {
 		panic(err)
 	}
@@ -266,7 +270,7 @@ func (winConf *WindowConfig) DrawGameBackground() {
 func (winConf *WindowConfig) LoadHorDoor() {
 	//Loads horizontal door
 
-	image, err := Utils.LoadImage("SysImages/HorDoor.png")
+	image, err := Utils.LoadImage("SysImages/GameProcess/HorDoor.png")
 	if err != nil {
 		panic(err)
 	}
@@ -277,7 +281,7 @@ func (winConf *WindowConfig) LoadHorDoor() {
 func (winConf *WindowConfig) LoadVerDoor() {
 	//Loads vertical door
 
-	image, err := Utils.LoadImage("SysImages/VerDoor.png")
+	image, err := Utils.LoadImage("SysImages/GameProcess/VerDoor.png")
 	if err != nil {
 		panic(err)
 	}
@@ -298,7 +302,7 @@ func (winConf WindowConfig) DrawVerDoor(coords pixel.Vec) {
 }
 
 func (winConf *WindowConfig) LoadDarkness() {
-	image, err := Utils.LoadImage("SysImages/darkness.png")
+	image, err := Utils.LoadImage("SysImages/GameProcess/darkness.png")
 	if err != nil {
 		panic(err)
 	}
@@ -313,7 +317,7 @@ func (winConf WindowConfig) DrawDarkness(coords pixel.Vec) {
 }
 
 func (winConf *WindowConfig) LoadGoldChest() {
-	image, err := Utils.LoadImage("SysImages/goldchest.png")
+	image, err := Utils.LoadImage("SysImages/GameProcess/goldchest.png")
 	if err != nil {
 		panic(err)
 	}
@@ -328,7 +332,7 @@ func (winConf WindowConfig) DrawGoldChest() {
 }
 
 func (winConf *WindowConfig) LoadCreationLobbyMenuBGPressedButton() {
-	image, err := Utils.LoadImage("SysImages/CreateLobbyImagePressedButton.png")
+	image, err := Utils.LoadImage("SysImages/Menues/CreateLobbyImagePressedButton.png")
 	if err != nil {
 		panic(err)
 	}
@@ -341,7 +345,7 @@ func (winConf *WindowConfig) DrawCreationLobbyMenuBGPressedButton() {
 }
 
 func (winConf *WindowConfig) LoadWaitRoomPressedButton() {
-	image, err := Utils.LoadImage("SysImages/WaitRoomPressedButton.png")
+	image, err := Utils.LoadImage("SysImages/Menues/WaitRoomPressedButton.png")
 	if err != nil {
 		panic(err)
 	}
@@ -354,7 +358,7 @@ func (winConf *WindowConfig) DrawWaitRoomPressedButton() {
 }
 
 func (winConf *WindowConfig) LoadStartMenuPressedCreateButton() {
-	image, err := Utils.LoadImage("SysImages/StartMenuPressedCreateButton.png")
+	image, err := Utils.LoadImage("SysImages/Menues/StartMenuPressedCreateButton.png")
 	if err != nil {
 		panic(err)
 	}
@@ -367,7 +371,7 @@ func (winConf *WindowConfig) DrawStartMenuPressedCreateButton() {
 }
 
 func (winConf *WindowConfig) LoadStartMenuPressedJoinButton() {
-	image, err := Utils.LoadImage("SysImages/StartMenuPressedJoinButton.png")
+	image, err := Utils.LoadImage("SysImages/Menues/StartMenuPressedJoinButton.png")
 	if err != nil {
 		panic(err)
 	}
@@ -380,7 +384,7 @@ func (winConf *WindowConfig) DrawStartMenuPressedJoinButton() {
 }
 
 func (winConf *WindowConfig) LoadHPHeart() {
-	picture, err := Utils.LoadImage("SysImages/hp-heart.png")
+	picture, err := Utils.LoadImage("SysImages/GameProcess/ElementsPanel/hp-heart.png")
 	if err != nil {
 		panic(err)
 	}
@@ -397,7 +401,7 @@ func (winConf *WindowConfig) DrawHPHeart(vector pixel.Vec) {
 }
 
 func (winConf *WindowConfig) LoadElemtsPanel(){
-	image, err := Utils.LoadImage("SysImages/ElementsPanel.png")
+	image, err := Utils.LoadImage("SysImages/GameProcess/ElementsPanel/ElementsPanel.png")
 	if err != nil{
 		log.Fatalln(err)
 	}
@@ -409,6 +413,14 @@ func (winConf *WindowConfig) DrawElementsPanel(){
 	cam := pixel.IM.Moved(winConf.Win.Bounds().Center().Sub(winConf.BGImages.StartMenuBG.Picture().Bounds().Center()))
 	winConf.Win.SetMatrix(cam)
 	winConf.BGImages.ElementsPanel.Draw(winConf.Win, pixel.IM.Moved(pixel.V(475, 532.5)))
+	cam = pixel.IM.Scaled(winConf.Cam.CamPos, winConf.Cam.CamZoom).Moved(winConf.Win.Bounds().Center().Sub(winConf.Cam.CamPos))
+	winConf.Win.SetMatrix(cam)
+}
+
+func (winConf *WindowConfig) DrawWeaponIcon(wn string){
+	cam := pixel.IM.Moved(winConf.Win.Bounds().Center().Sub(winConf.BGImages.StartMenuBG.Picture().Bounds().Center()))
+	winConf.Win.SetMatrix(cam)
+	winConf.Components.AvailableWeaponIconImages[wn].Draw(winConf.Win, pixel.IM.Moved(pixel.V(870, 525)))
 	cam = pixel.IM.Scaled(winConf.Cam.CamPos, winConf.Cam.CamZoom).Moved(winConf.Win.Bounds().Center().Sub(winConf.Cam.CamPos))
 	winConf.Win.SetMatrix(cam)
 }

@@ -92,7 +92,7 @@ func GetAvailableHeroImages()map[string]*pixel.Sprite{
 	*/
 
 	listOfHeroes := make(map[string]*pixel.Sprite)
-	CommInstanse := exec.Command("ls", "./SysImages")
+	CommInstanse := exec.Command("ls", "./SysImages/Icons/Heroes")
 
 	result, err := CommInstanse.Output()
 	if err != nil{
@@ -103,7 +103,7 @@ func GetAvailableHeroImages()map[string]*pixel.Sprite{
 		if len(value) > 0{
 			if strings.HasSuffix(value, ".png") && strings.Contains(value, "hero"){
 				fileName := strings.Split(value, ".")[0]
-				image, err := LoadImage(fmt.Sprintf("./SysImages/%s", value))
+				image, err := LoadImage(fmt.Sprintf("./SysImages/Icons/Heroes/%s", value))
 				if err != nil{
 					panic(err)
 				}
@@ -122,7 +122,7 @@ func GetAvailableWeaponImages()map[string]*pixel.Sprite{
 	*/
 
 	listOfHeroes := make(map[string]*pixel.Sprite)
-	CommInstanse := exec.Command("ls", "./SysImages")
+	CommInstanse := exec.Command("ls", "./SysImages/Icons/Weapons/")
 
 	result, err := CommInstanse.Output()
 	if err != nil{
@@ -133,7 +133,7 @@ func GetAvailableWeaponImages()map[string]*pixel.Sprite{
 		if len(value) > 0{
 			if strings.HasSuffix(value, ".png") && strings.Contains(value, "weapon"){
 				fileName := strings.Split(value, ".")[0]
-				image, err := LoadImage(fmt.Sprintf("./SysImages/%s", value))
+				image, err := LoadImage(fmt.Sprintf("./SysImages/Icons/Weapons/%s", value))
 				if err != nil{
 					panic(err)
 				}
@@ -145,28 +145,35 @@ func GetAvailableWeaponImages()map[string]*pixel.Sprite{
 	return listOfHeroes
 }
 
-// func CheckErrorResp(resp []byte)bool{
+func GetAvailableWeaponIconImages()map[string]*pixel.Sprite{
+	/* Saves to map all the available hero images in
+	   current directory. Choses files with png extension 
+	   and if it contains 'hero' suffix
+	*/
 
-// 	cleanedResp := CleanGottenResponse(resp)
-// 	splitedOne := strings.Split(cleanedResp, "@")
-// 	if len(splitedOne) > 1{
-// 		if splitedOne[0] == "error"{
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
+	listOfHeroes := make(map[string]*pixel.Sprite)
+	CommInstanse := exec.Command("ls", "./SysImages/GameProcess/ElementsPanel")
 
-// func CheckLobbyIsReady(resp []byte)bool{
-// 	cleanedResp := CleanGottenResponse(resp)
-// 	splitedOne := strings.Split(cleanedResp, "@")
-// 	if len(splitedOne) > 1{
-// 		if splitedOne[1] == "lobby is ready"{
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
+	result, err := CommInstanse.Output()
+	if err != nil{
+		panic(err)
+	}
+	splitedResults := strings.Split(string(result), "\n")
+	for _, value := range splitedResults{
+		if len(value) > 0{
+			if strings.HasSuffix(value, ".png") && strings.Contains(value, "weapon"){
+				fileName := strings.Split(value, ".")[0]
+				image, err := LoadImage(fmt.Sprintf("./SysImages/GameProcess/ElementsPanel/%s", value))
+				if err != nil{
+					panic(err)
+				}
+				sprite := pixel.NewSprite(image, image.Bounds())
+				listOfHeroes[fileName] = sprite
+			}
+		}
+	}
+	return listOfHeroes
+}
 
 func GetRandomSpawn()pixel.Vec{
 	spawnPlaces := []pixel.Vec{
@@ -181,15 +188,6 @@ func GetRandomSpawn()pixel.Vec{
 func RemoveIndex(s []string, index int)[]string{
 	return append(s[:index], s[index+1:]...)
 }
-
-// func Any(b []byte)bool{
-// 	for _, value := range b{
-// 		if value != 0 && value != 91 && value != 93{
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
 
 func Clean(b []byte)[]byte{
 	var cl []byte

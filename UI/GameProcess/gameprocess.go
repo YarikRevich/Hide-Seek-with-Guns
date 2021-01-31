@@ -210,6 +210,8 @@ func (g *GameProcess) DrawElements() {
 		bias += 100
 	}
 
+	g.winConf.DrawWeaponIcon(g.userConfig.GameInfo.WeaponName)
+
 	if g.userConfig.GameInfo.Health < 1 {
 		g.mapComponents.GetCam().SetDefaultCam()
 		g.currState.MainStates.SetStartMenu()
