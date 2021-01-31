@@ -85,6 +85,7 @@ func run() {
 	winConf.LoadAllImageComponents()
 	winConf.LoadAllTextAreas()
 	winConf.LoadAvailableHeroImages()
+	winConf.LoadAvailableWeaponImages()
 
 	//Draws background image to start game
 	winConf.DrawBackgroundImage()
@@ -99,7 +100,10 @@ func run() {
 			X: int(randomSpawn.X),
 			Y: int(randomSpawn.Y),
 		},
-		GameInfo: &Users.GameInfo{Health: 10},
+		GameInfo: &Users.GameInfo{
+			Health: 10,
+			WeaponName:  Utils.GetRandomWeaponImage(winConf.Components.AvailableWeaponImages),
+		},
 		PersonalInfo: &Users.PersonalInfo{
 			Username:    username,
 			HeroPicture: Utils.GetRandomHeroImage(winConf.Components.AvailableHeroImages),

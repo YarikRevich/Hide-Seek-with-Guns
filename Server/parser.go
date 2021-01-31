@@ -68,6 +68,8 @@ type GameRequest struct{
 	}
 	GameInfo        struct{
 		Health int
+		WeaponName string
+		WeaponRadius int
 	}
 	PersonalInfo    struct{
 		LobbyID string
@@ -75,7 +77,10 @@ type GameRequest struct{
 		HeroPicture string
 	}
 	Animation       struct{
-		UpdationRun int
+		HeroIconUpdation int
+		HeroIconUpdationDelay int
+		WeaponIconUpdation int
+		WeaponIconUpdationDelay int
 		CurrentFrame int
 		CurrentFrameMatrix []float64
 	}

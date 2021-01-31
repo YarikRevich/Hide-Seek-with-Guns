@@ -75,9 +75,20 @@ func GetRandomHeroImage(availableHeroImages map[string]*pixel.Sprite)string{
 	return imageNames[GetRandNum(len(imageNames))]
 }
 
+func GetRandomWeaponImage(availableWeaponImages map[string]*pixel.Sprite)string{
+	//Choses random hero image from the map of all the available hero images.
+
+	var imageNames []string
+	for key := range availableWeaponImages{
+		imageNames = append(imageNames, key)
+	}
+	return imageNames[GetRandNum(len(imageNames))]
+}
+
 func GetAvailableHeroImages()map[string]*pixel.Sprite{
 	/* Saves to map all the available hero images in
-	   current directory. Choses files with png extension
+	   current directory. Choses files with png extension 
+	   and if it contains 'hero' suffix
 	*/
 
 	listOfHeroes := make(map[string]*pixel.Sprite)
@@ -104,28 +115,58 @@ func GetAvailableHeroImages()map[string]*pixel.Sprite{
 	return listOfHeroes
 }
 
-func CheckErrorResp(resp []byte)bool{
+func GetAvailableWeaponImages()map[string]*pixel.Sprite{
+	/* Saves to map all the available weapon images in
+	   current directory. Choses files with png extension 
+	   and if it contains 'hero' suffix
+	*/
 
-	cleanedResp := CleanGottenResponse(resp)
-	splitedOne := strings.Split(cleanedResp, "@")
-	if len(splitedOne) > 1{
-		if splitedOne[0] == "error"{
-			return true
+	listOfHeroes := make(map[string]*pixel.Sprite)
+	CommInstanse := exec.Command("ls", "./SysImages")
+
+	result, err := CommInstanse.Output()
+	if err != nil{
+		panic(err)
+	}
+	splitedResults := strings.Split(string(result), "\n")
+	for _, value := range splitedResults{
+		if len(value) > 0{
+			if strings.HasSuffix(value, ".png") && strings.Contains(value, "weapon"){
+				fileName := strings.Split(value, ".")[0]
+				image, err := LoadImage(fmt.Sprintf("./SysImages/%s", value))
+				if err != nil{
+					panic(err)
+				}
+				sprite := pixel.NewSprite(image, image.Bounds())
+				listOfHeroes[fileName] = sprite
+			}
 		}
 	}
-	return false
+	return listOfHeroes
 }
 
-func CheckLobbyIsReady(resp []byte)bool{
-	cleanedResp := CleanGottenResponse(resp)
-	splitedOne := strings.Split(cleanedResp, "@")
-	if len(splitedOne) > 1{
-		if splitedOne[1] == "lobby is ready"{
-			return true
-		}
-	}
-	return false
-}
+// func CheckErrorResp(resp []byte)bool{
+
+// 	cleanedResp := CleanGottenResponse(resp)
+// 	splitedOne := strings.Split(cleanedResp, "@")
+// 	if len(splitedOne) > 1{
+// 		if splitedOne[0] == "error"{
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
+
+// func CheckLobbyIsReady(resp []byte)bool{
+// 	cleanedResp := CleanGottenResponse(resp)
+// 	splitedOne := strings.Split(cleanedResp, "@")
+// 	if len(splitedOne) > 1{
+// 		if splitedOne[1] == "lobby is ready"{
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
 func GetRandomSpawn()pixel.Vec{
 	spawnPlaces := []pixel.Vec{
@@ -141,14 +182,14 @@ func RemoveIndex(s []string, index int)[]string{
 	return append(s[:index], s[index+1:]...)
 }
 
-func Any(b []byte)bool{
-	for _, value := range b{
-		if value != 0 && value != 91 && value != 93{
-			return true
-		}
-	}
-	return false
-}
+// func Any(b []byte)bool{
+// 	for _, value := range b{
+// 		if value != 0 && value != 91 && value != 93{
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
 func Clean(b []byte)[]byte{
 	var cl []byte

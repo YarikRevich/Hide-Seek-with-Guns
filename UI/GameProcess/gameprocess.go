@@ -184,11 +184,16 @@ func (g *GameProcess) DrawElements() {
 
 	g.mapComponents.GetCollisions().GetDoorsCollisions().DrawDoors(g.winConf.DrawHorDoor, g.winConf.DrawVerDoor)
 
-	Animation.MoveAndChangeAnim(g.userConfig, g.winConf)
+	
+
+	Animation.NewDefaultSwordAnimator(g.winConf, g.userConfig).Move()
+	Animation.NewIconAnimator(g.winConf, g.userConfig).Move()
 
 	for _, value := range g.winConf.GameProcess.OtherUsers {
-		Animation.MoveAndChangeAnim(value, g.winConf)
+		Animation.NewDefaultSwordAnimator(g.winConf, value).Move()
+		Animation.NewIconAnimator(g.winConf, value).Move()
 	}
+
 
 	g.winConf.DrawDarkness(pixel.V((float64(g.userConfig.Pos.X)*2.5)-31, (float64(g.userConfig.Pos.Y)*2.5)-30))
 
@@ -199,7 +204,6 @@ func (g *GameProcess) DrawElements() {
 
 	var bias float64
 	for i := 0; i <= g.userConfig.GameInfo.Health; i++ {
-		//fmt.Println(i, bias)
 		g.winConf.DrawHPHeart(
 			pixel.V(-40+bias, 1200),
 		)

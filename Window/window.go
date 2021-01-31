@@ -30,6 +30,7 @@ type MenuImages struct {
 	StartMenuPressedJoinButton       *pixel.Sprite
 	HPHeart                          *pixel.Sprite
 	ElementsPanel                    *pixel.Sprite
+	DefaultSword                     *pixel.Sprite
 }
 
 type TextAreas struct {
@@ -79,6 +80,7 @@ type GameProcess struct {
 
 type Components struct {
 	AvailableHeroImages map[string]*pixel.Sprite
+	AvailableWeaponImages map[string]*pixel.Sprite
 	AvPlacesForSpaws    []pixel.Vec
 }
 
@@ -145,6 +147,10 @@ func (winConf *WindowConfig) DrawStartMenuBG() {
 
 func (winConf *WindowConfig) LoadAvailableHeroImages() {
 	winConf.Components.AvailableHeroImages = Utils.GetAvailableHeroImages()
+}
+
+func (winConf *WindowConfig) LoadAvailableWeaponImages(){
+	winConf.Components.AvailableWeaponImages = Utils.GetAvailableWeaponImages()
 }
 
 func (winConf *WindowConfig) DrawErrorText() {

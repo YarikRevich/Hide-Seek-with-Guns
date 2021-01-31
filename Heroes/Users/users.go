@@ -5,13 +5,13 @@ import (
 )
 
 type User struct{
-	Conn net.Conn
-	Pos *Pos
-	GameInfo *GameInfo
+	Conn         net.Conn
+	Pos          *Pos
+	GameInfo     *GameInfo
 	PersonalInfo *PersonalInfo
-	Animation *Animation
-	Networking *Networking
-	Context    *Context
+	Animation    *Animation
+	Networking   *Networking
+	Context      *Context
 }
 
 type Pos struct{
@@ -21,19 +21,23 @@ type Pos struct{
 
 type GameInfo struct{
 	Health       int
-	//WeaponRadius int
+	WeaponName   string
+	WeaponRadius int
 }
 
 type PersonalInfo struct{
-	LobbyID string
-	Username string
+	LobbyID     string
+	Username    string
 	HeroPicture string
 }
 
 type Animation struct{
-	UpdationRun int
+	HeroIconUpdation int
+	HeroIconUpdationDelay int
+	WeaponIconUpdation int
+	WeaponIconUpdationDelay int
 	CurrentFrame int
-	CurrentFrameMatrix []float64	
+	CurrentFrameMatrix []float64
 }
 
 type Networking struct{
